@@ -1,13 +1,31 @@
 
+import { readFileSync } from 'fs';
 
+const DATA_PATH = '../../data/gameData.json';
+const MAX_PLAYERS = 8;
+const WHITE_CARDS_PER_PLAYER = 6;
+
+export enum GameState{
+    LOBBY,
+    STARTING,
+    CHOOSING_ZAR,
+    PLAYER_TURN,
+    ZAR_TURN,
+    COUNTING_POINTS,
+    FINISHED
+}
 export class Game{
 
     private players: Map<string, number> = new Map<string, number>(); //Maps player to points
     private host: string|null = null;
-    private maxPlayers = 8;
+    private maxPlayers = MAX_PLAYERS;
 
+
+    private currentZar: string|null = null;
     private currentTurn: number = 0;
-    private gameStarted: boolean = false;
+    private gameState: GameState = GameState.LOBBY;
+
+
     
     constructor(host: string){
         this.host = host;
@@ -41,9 +59,70 @@ export class Game{
     }
 
 
-    public startGame(){
-        if(this.players.size < 3) return;
-        this.gameStarted = true;
+    public initializeGameStart(){
+        this.gameState = GameState.STARTING;
+
+        //Shuffle player map
+        this.players = new Map([...this.players.entries()].sort(() => Math.random() - 0.5));
+
+
+    }
+
+    private inizializeNewRound(){
+
+        this.gameState = GameState.CHOOSING_ZAR;
+
+        //Select ZAR
+        this.currentZar = this.players.keys().next().value;
+
+        let blackCard: string = this.getNewBlackCard();
+
+        let whiteCards: Map<string, string[]> = this.getNewWhiteCards();
+
+        
+
+    }
+
+    private getNewBlackCard(): string{
+        
+        // Read the file synchronously
+        const rawData = readFileSync(DATA_PATH, 'utf8');
+
+        // Parse the JSON content
+        const jsonData = JSON.parse(rawData);
+
+        // Get the black cards
+        const blackCards: string[] = jsonData.blackCards;
+
+        // Get a random black card
+        const randomBlackCard: string = blackCards[Math.floor(Math.random() * blackCards.length)];
+
+        return randomBlackCard;
+    }
+
+    private getNewWhiteCards(): Map<string, string[]>{
+            
+            // Read the file synchronously
+            const rawData = readFileSync(DATA_PATH, 'utf8');
+    
+            // Parse the JSON content
+            const jsonData = JSON.parse(rawData);
+    
+            // Get the white cards
+            const whiteCards: string[] = jsonData.whiteCards;
+
+            let whiteCardsMap: Map<string, string[]> = new Map<string, string[]>();
+    
+            for(let player of this.players.keys()){
+                let randomWhiteCards: string[] = [];
+                for(let i = 0; i < WHITE_CARDS_PER_PLAYER; i++){
+                    randomWhiteCards.push(whiteCards[Math.floor(Math.random() * whiteCards.length)]);
+                }
+                whiteCardsMap.set(player, randomWhiteCards);
+            }
+
+    
+            return whiteCardsMap;
     }
 
     //Getters 
@@ -68,7 +147,7 @@ export class Game{
     }
 
     public isGameStarted(): boolean{
-        return this.gameStarted;
+        return this.gameState != GameState.LOBBY;
     }
 
 

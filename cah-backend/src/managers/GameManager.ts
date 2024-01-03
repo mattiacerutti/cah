@@ -1,5 +1,6 @@
-import { Game } from "../models/Game";
+import { Game, GameState } from "../models/Game";
 import Crypto from "crypto";
+import { PlayerEventErrors } from "cah-shared/enums/PlayerEventTypes";
 
 export class GameManager{
 
@@ -16,15 +17,18 @@ export class GameManager{
     }
 
     public deleteGame(id: string){
+        //TODO: Implement error
         this.currentGames.delete(id);
     }
 
     public addPlayerToGame(id: string, playerId: string){
+                //TODO: Implement error
         this.currentGames.get(id)?.addPlayer(playerId);
     }
 
     public removePlayerFromGame(id: string, playerId: string){
 
+        //TODO: Implement error
 
         this.currentGames.get(id)?.removePlayer(playerId);
 
@@ -32,7 +36,6 @@ export class GameManager{
             this.currentGames.get(id)?.switchHost();
         }
 
-        //If no players left, delete the game TODO: comunicate to socket
         if(this.currentGames.get(id)?.getPlayers().size == 0){
             this.deleteGame(id);
             console.log("Deleted game with id: " + id);
@@ -42,7 +45,15 @@ export class GameManager{
     }
 
     public startGame(id: string){
-        this.currentGames.get(id)?.startGame();
+        let game = this.currentGames.get(id);
+
+        if(!game) throw new Error(PlayerEventErrors.gameNotFound);
+
+        if(game.getHost() == null) throw new Error(PlayerEventErrors.genericError);;
+
+        if(game.getPlayers().size < 3) throw new Error(PlayerEventErrors.notEnoughPlayers);;
+
+        this.currentGames.get(id)?.initializeGameStart();
     }
 
     public getGame(id: string): Game | undefined{

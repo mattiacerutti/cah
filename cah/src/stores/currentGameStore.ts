@@ -4,6 +4,8 @@ export const currentGameStore = writable({
     host: null,
     players: new Map<string, number>(),  
     gameId: null,
+    gameStarted: false,
+    gameTurn: 0,
 });
 
 export function updateCurrentGame() {

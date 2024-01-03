@@ -2,8 +2,8 @@
 
 import http from 'http';
 import { Server } from 'socket.io';
-import { setupSocketHandlers } from './sockets/socketHandlers';
 import { GameManager } from "./managers/GameManager";
+import { socketService } from './sockets/SocketService';
 
 const httpServer = http.createServer();
 const io = new Server(httpServer, {
@@ -14,7 +14,8 @@ const io = new Server(httpServer, {
 
 let gameManager = new GameManager();
 
-setupSocketHandlers(io, gameManager);
+socketService.bind(io, gameManager);
+socketService.startListening();
 
 const PORT = 3000;
 httpServer.listen(PORT, () => {

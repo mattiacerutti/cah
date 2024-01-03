@@ -2,7 +2,7 @@
 import io, { Socket } from 'socket.io-client';
 import { playerStore } from '../stores/playerStore';
 import { get } from 'svelte/store';
-import { toObject, toMap } from "cah-shared/utils";
+import { toMap, toObject } from "cah-shared/utils";
 
 type EventCallback = (...args: unknown[]) => void;
 
@@ -45,13 +45,18 @@ class SocketService {
     }
 
     const wrappedCallback = (data) => {
-        // Convert the data back to Maps where necessary
+        // Convert the data back to Maps (if it was originally a Map)
         const convertedData = toMap(data);
         callback(convertedData);
     }
 
     this.eventHandlers.get(event)?.push(wrappedCallback);
 }
+
+public unsubscribe(event: string) {
+    this.eventHandlers.delete(event);
+}
+
 
 
   public emit(event: string, data: unknown) {

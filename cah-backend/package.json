@@ -10,14 +10,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cah-shared": "file:../shared",
     "cors": "^2.8.5",
-    "socket.io": "^4.7.2",
-		"cah-shared": "file:../shared"	
+    "socket.io": "^4.7.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
     "nodemon": "^3.0.2",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   }
 }

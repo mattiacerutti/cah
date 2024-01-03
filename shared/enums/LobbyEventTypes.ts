@@ -4,6 +4,7 @@ export enum LobbyEventTypes{
     playerJoined = 'player-joined',
     playerLeft = 'player-left',
     gameCreated = 'game-created',
+    gameStarted = 'game-started',
 }
 
 export interface PlayerJoinedData{
@@ -21,5 +22,9 @@ export interface PlayerLeftData{
 }
 
 export interface GameCreatedData{
+    gameId: string,
+}
+
+export interface GameStartedData{
     gameId: string,
 }

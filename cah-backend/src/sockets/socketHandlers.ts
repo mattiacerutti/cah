@@ -1,72 +1,66 @@
-import { Server } from "socket.io";
-import { PlayerEventTypes } from "cah-shared/enums/PlayerEventTypes";
+import { Server, Socket } from "socket.io";
+import {
+  PlayerEventTypes,
+  PlayerEventErrors,
+  JoinGameData,
+} from "cah-shared/enums/PlayerEventTypes";
 import {
   LobbyEventTypes,
   PlayerJoinedData,
   PlayerLeftData,
   GameCreatedData,
+  GameStartedData,
 } from "cah-shared/enums/LobbyEventTypes";
 import { GameManager } from "../managers/GameManager";
-import { toObject, toMap } from "cah-shared/utils";
-import { Socket } from "socket.io";
+import { socketService } from "./SocketService";
+import { SocketResponse } from "cah-shared/enums/SocketResponse";
 
+let activeConnections = new Map<
+  string,
+  { playerId: string; gameId: string | undefined }
+>();
 
-function emit(emitter, ...args) {
-  // Check if the first argument is a function (like socket.to)
-  if (typeof emitter === 'function') {
-      // Additional processing for methods like .to()
-      emitter = emitter(...args.slice(0, 1));
-      args = args.slice(1);
-  }
+export function startListening() {
 
-  // Convert the data
-  const dataIdx = args.length > 1 ? 1 : 0; // Assumes data is always the second argument
-  if (typeof args[dataIdx] === 'object') {
-      args[dataIdx] = toObject(args[dataIdx]);
-  }
+  socketService.subscribe(null, "connection", (socket: any) => {
 
-  // Emit the event with the converted data
-  emitter.emit(...args);
-}
+    let io = socketService.getIO();
+    let gameManager = socketService.getGameManager();
 
-type EventCallback = (data: any) => void;
-
-function subscribe(socket: Socket, event: string, handler: EventCallback) {
-  socket.on(event, (data) => {
-      const convertedData = toMap(data);
-      handler(convertedData);
-  });
-}
-
-export function setupSocketHandlers(io: Server, gameManager: GameManager) {
-  let activeConnections = new Map<
-    string,
-    { playerId: string; gameId: string | undefined }
-  >();
-
-  
-
-  io.on("connection", (socket) => {
     let userId: string = socket.handshake.query.playerId as string;
+
     activeConnections.set(socket.id, {
       playerId: userId,
       gameId: undefined,
     });
 
-    subscribe(socket, PlayerEventTypes.JoinGame, (data) => {
-
+    socketService.subscribe(socket, PlayerEventTypes.JoinGame, (data: any) => {
       console.log("Player " + data.playerId + " wants to join " + data.gameId);
 
       let game = gameManager.getGame(data.gameId);
 
       // Check existance of game.
       if (!game) {
-        // Return some kind of error
+        let dataToSend: SocketResponse<any> = {
+          success: false,
+          error: {
+            code: PlayerEventErrors.gameNotFound,
+            message: "Game not found",
+          },
+        };
+        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
         return;
       }
 
       if (game.isPlayerInGame(data.playerId)) {
-        // Return some kind of error
+        let dataToSend: SocketResponse<any> = {
+          success: false,
+          error: {
+            code: PlayerEventErrors.playerAlreadyInGame,
+            message: "Player already in the game",
+          },
+        };
+        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
         return;
       }
 
@@ -81,26 +75,56 @@ export function setupSocketHandlers(io: Server, gameManager: GameManager) {
       // Put the socket in the right group (for emitting purposes)
       socket.join(data.gameId);
 
-      let dataToSend: PlayerJoinedData = {
-        playerId: data.playerId,
-        gameId: data.gameId,
-        players: game.getPlayers(),
-        host: game.getHost(),
+      let dataToSend: SocketResponse<PlayerJoinedData> = {
+        success: true,
+        data: {
+          playerId: data.playerId,
+          gameId: data.gameId,
+          players: game.getPlayers(),
+          host: game.getHost(),
+        },
       };
 
+      console.log("amogus " + dataToSend.data.players.size);
+
       // Emit the event to the players
-      emit(io.to(data.gameId), LobbyEventTypes.playerJoined, dataToSend)
+      socketService.emit(
+        io.to(data.gameId),
+        LobbyEventTypes.playerJoined,
+        dataToSend
+      );
     });
 
-    subscribe(socket, PlayerEventTypes.LeaveGame, (data) => {
+    socketService.subscribe(socket, PlayerEventTypes.LeaveGame, (data: any) => {
       // Check existance of game.
       if (!gameManager.getGame(data.gameId)) {
-        // Return some kind of error
+        let dataToSend: SocketResponse<any> = {
+          success: false,
+          error: {
+            code: PlayerEventErrors.gameNotFound,
+            message: "Game not found",
+          },
+        };
+        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
         return;
       }
 
+      let game = gameManager.getGame(data.gameId);
+
       // Add the player to the game
       gameManager.removePlayerFromGame(data.gameId, data.playerId);
+
+      if (!game.isPlayerInGame(data.playerId)) {
+        let dataToSend: SocketResponse<any> = {
+          success: false,
+          error: {
+            code: PlayerEventErrors.playerNotInGame,
+            message: "This player is not in the game",
+          },
+        };
+        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
+        return;
+      }
 
       activeConnections.set(socket.id, {
         playerId: data.playerId,
@@ -110,38 +134,52 @@ export function setupSocketHandlers(io: Server, gameManager: GameManager) {
       // Put the socket in the right group (for emitting purposes)
       socket.leave(data.gameId);
 
-      let dataToSend: PlayerLeftData = {
-        playerId: data.playerId,
-        gameId: data.gameId,
-        players: gameManager.getGame(data.gameId)?.getPlayers(),
-        host: gameManager.getGame(data.gameId)?.getHost()
+      let dataToSend: SocketResponse<PlayerLeftData> = {
+        success: true,
+        data: {
+          playerId: data.playerId,
+          gameId: data.gameId,
+          players: gameManager.getGame(data.gameId)?.getPlayers(),
+          host: gameManager.getGame(data.gameId)?.getHost(),
+        },
       };
 
       // Emit the event to the players
-      emit(io.to(data.gameId), LobbyEventTypes.playerLeft, dataToSend)
+      socketService.emit(
+        io.to(data.gameId),
+        LobbyEventTypes.playerLeft,
+        dataToSend
+      );
     });
 
-    subscribe(socket, PlayerEventTypes.CreateGame, (data) => {
-      // Create the game
-      let gameId = gameManager.createGame(data.playerId);
+    socketService.subscribe(
+      socket,
+      PlayerEventTypes.CreateGame,
+      (data: any) => {
+        // Create the game
+        let gameId = gameManager.createGame(data.playerId);
 
-      activeConnections.set(socket.id, {
-        playerId: data.playerId,
-        gameId: gameId,
-      });
+        activeConnections.set(socket.id, {
+          playerId: data.playerId,
+          gameId: gameId,
+        });
 
-      // Put the socket in the right group (for emitting purposes)
-      socket.join(gameId);
+        // Put the socket in the right group (for emitting purposes)
+        socket.join(gameId);
 
-      let dataToSend: GameCreatedData = {
-        gameId: gameId,
-      };
+        let dataToSend: SocketResponse<GameCreatedData> = {
+          success: true,
+          data: {
+            gameId: gameId,
+          },
+        };
 
-      // Emit the event to the player
-      emit(socket, LobbyEventTypes.gameCreated, dataToSend)
-    });
+        // Emit the event to the player
+        socketService.emit(socket, LobbyEventTypes.gameCreated, dataToSend);
+      }
+    );
 
-    subscribe(socket, "disconnect", () => {
+    socketService.subscribe(socket, "disconnect", () => {
       let playerId: string = activeConnections.get(socket.id)
         ?.playerId as string;
       let gameId: string | undefined = activeConnections.get(socket.id)
@@ -156,16 +194,75 @@ export function setupSocketHandlers(io: Server, gameManager: GameManager) {
         if (game) {
           gameManager.removePlayerFromGame(gameId, playerId);
 
-          let dataToSend: PlayerLeftData = {
-            playerId: playerId,
-            gameId: gameId,
-            players: gameManager.getGame(gameId)?.getPlayers(),
-            host: gameManager.getGame(gameId)?.getHost()
+          let dataToSend: SocketResponse<PlayerLeftData> = {
+            success: true,
+            data: {
+              playerId: playerId,
+              gameId: gameId,
+              players: gameManager.getGame(gameId)?.getPlayers(),
+              host: gameManager.getGame(gameId)?.getHost(),
+            },
           };
 
-          emit(io.to(gameId), LobbyEventTypes.playerLeft, dataToSend);
+          socketService.emit(
+            io.to(gameId),
+            LobbyEventTypes.playerLeft,
+            dataToSend
+          );
         }
       }
+    });
+
+    socketService.subscribe(socket, PlayerEventTypes.StartGame, (data: any) => {
+      let game = gameManager.getGame(data.gameId);
+
+      if (!game) {
+        let dataToSend: SocketResponse<any> = {
+          success: false,
+          error: {
+            code: PlayerEventErrors.gameNotFound,
+            message: "Game not found",
+          },
+        };
+        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
+        return;
+      }
+
+      if (game.getHost() != data.playerId) {
+        let dataToSend: SocketResponse<any> = {
+          success: false,
+          error: {
+            code: PlayerEventErrors.notHost,
+            message: "User is not the host of the game. Can't start game",
+          },
+        };
+        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
+        return;
+      }
+
+      try {
+        gameManager.startGame(data.gameId);
+      } catch (e) {
+        let dataToSend: SocketResponse<any> = {
+          success: false,
+          error: {
+            code: e.message,
+            message: e.message,
+          },
+        };
+        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
+        return;
+      }
+
+      let dataToSend: SocketResponse<any> = {
+        success: true,
+      };
+
+      socketService.emit(
+        io.to(data.gameId),
+        LobbyEventTypes.gameStarted,
+        dataToSend
+      );
     });
   });
 }
