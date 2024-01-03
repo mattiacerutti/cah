@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { toMap, toObject } from "cah-shared/utils";
 import { GameManager } from "@/managers/GameManager";
-import { startListening } from "./socketHandlers";
+import { startListeningToNetworkEvents, startListeningToGameEvents } from "./socketHandlers";
 
 type EventCallback = (...args: unknown[]) => void;
 
@@ -12,7 +12,8 @@ class SocketService {
   public bind(io: Server, gameManager: GameManager) {
     this.io = io;
     this.gameManager = gameManager;
-    this.startListening();
+    startListeningToNetworkEvents();
+    startListeningToGameEvents();
   }
 
   public emit(emitter, ...args) {
@@ -60,9 +61,6 @@ class SocketService {
     return this.io;
   }
 
-  private startListening() {
-    startListening();
-  }
 }
 
 export const socketService = new SocketService();

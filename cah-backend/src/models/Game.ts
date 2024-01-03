@@ -1,8 +1,9 @@
 
 import { readFileSync } from 'fs';
 import EventEmitter from 'events';
+import { GameEventTypes, NewRoundData } from '../events/GameEvents';
 
-const DATA_PATH = '../../data/gameData.json';
+const DATA_PATH = "../../data/gameData.json";
 const MAX_PLAYERS = 8;
 const WHITE_CARDS_PER_PLAYER = 6;
 
@@ -23,7 +24,7 @@ export class Game extends EventEmitter{
 
 
     private currentZar: string|null = null;
-    private currentTurn: number = 0;
+    private currentRound: number = 0;
     private gameState: GameState = GameState.LOBBY;
 
 
@@ -53,7 +54,7 @@ export class Game extends EventEmitter{
     }
 
     public nextTurn(){
-        this.currentTurn++;
+        this.currentRound++;
     }
 
     public addPointsToPlayer(playerId: string){
@@ -67,10 +68,15 @@ export class Game extends EventEmitter{
         //Shuffle player map
         this.players = new Map([...this.players.entries()].sort(() => Math.random() - 0.5));
 
+        let dataToSend: NewRoundData = this.inizializeNewRound();
+
+        this.emitEvent(dataToSend);
+
+        this.gameState = GameState.PLAYER_TURN;
 
     }
 
-    private inizializeNewRound(){
+    private inizializeNewRound(): NewRoundData{
 
         this.gameState = GameState.CHOOSING_ZAR;
 
@@ -81,14 +87,23 @@ export class Game extends EventEmitter{
 
         let whiteCards: Map<string, string[]> = this.getNewWhiteCards();
 
+        let dataToSend: NewRoundData = {
+            event: GameEventTypes.newRound,
+            round: this.currentRound,
+            blackCard: blackCard,
+            whiteCards: whiteCards,
+            zar: this.currentZar,
+            players: Array.from(this.players.keys()),
+        }
 
+        return dataToSend;
 
     }
 
     private getNewBlackCard(): string{
         
         // Read the file synchronously
-        const rawData = readFileSync(DATA_PATH, 'utf8');
+        const rawData = readFileSync(require.resolve(DATA_PATH), { encoding: "utf8" });
 
         // Parse the JSON content
         const jsonData = JSON.parse(rawData);
@@ -105,7 +120,7 @@ export class Game extends EventEmitter{
     private getNewWhiteCards(): Map<string, string[]>{
             
             // Read the file synchronously
-            const rawData = readFileSync(DATA_PATH, 'utf8');
+            const rawData = readFileSync(require.resolve(DATA_PATH), { encoding: "utf8" });
     
             // Parse the JSON content
             const jsonData = JSON.parse(rawData);
@@ -127,6 +142,10 @@ export class Game extends EventEmitter{
             return whiteCardsMap;
     }
 
+    private emitEvent(data: any){
+        this.emit("game-event", data);
+    }
+
     //Getters 
     public getPlayers(): Map<string, number>{
         return this.players;
@@ -145,7 +164,7 @@ export class Game extends EventEmitter{
     }
 
     public getCurrentTurn(): number{
-        return this.currentTurn;
+        return this.currentRound;
     }
 
     public isGameStarted(): boolean{

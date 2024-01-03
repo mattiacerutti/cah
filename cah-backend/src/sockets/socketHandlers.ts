@@ -11,16 +11,31 @@ import {
   GameCreatedData,
   GameStartedData,
 } from "cah-shared/events/LobbyEventTypes";
-import { GameManager } from "../managers/GameManager";
 import { socketService } from "./SocketService";
 import { SocketResponse } from "cah-shared/enums/SocketResponse";
+import { GameData, GameEvent, GameEventTypes } from "@/events/GameEvents";
 
 let activeConnections = new Map<
   string,
   { playerId: string; gameId: string | undefined }
 >();
 
-export function startListening() {
+export function startListeningToGameEvents() {
+  let io = socketService.getIO();
+  let gameManager = socketService.getGameManager();
+
+  gameManager.on("game-event", (event: GameEvent) => {
+    
+    let gameId: string = event.gameId;
+    let gameEvent: GameEventTypes = event.event;
+
+    console.log("Game event: " + event.event);
+
+
+  });
+}
+
+export function startListeningToNetworkEvents() {
 
   socketService.subscribe(null, "connection", (socket: any) => {
 
