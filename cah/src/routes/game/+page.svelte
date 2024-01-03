@@ -1,7 +1,7 @@
 <script lang="ts">
-	import {PlayerEventTypes} from "cah-shared/enums/PlayerEventTypes";
-	import type  {JoinGameData, CreateGameData} from 'cah-shared/enums/PlayerEventTypes';
-	import {type PlayerJoinedData, type GameCreatedData, LobbyEventTypes, type PlayerLeftData} from "cah-shared/enums/LobbyEventTypes";
+	import {PlayerEventTypes} from "cah-shared/events/PlayerEventTypes";
+	import type  {JoinGameData, CreateGameData} from 'cah-shared/events/PlayerEventTypes';
+	import {type PlayerJoinedData, type GameCreatedData, LobbyEventTypes, type PlayerLeftData} from "cah-shared/events/LobbyEventTypes";
 	import {onMount} from "svelte";
 	import { socketService } from "@/services/socketService";
 	import { get } from "svelte/store";

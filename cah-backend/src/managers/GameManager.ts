@@ -1,8 +1,8 @@
 import { Game, GameState } from "../models/Game";
 import Crypto from "crypto";
-import { PlayerEventErrors } from "cah-shared/enums/PlayerEventTypes";
-
-export class GameManager{
+import { PlayerEventErrors } from "cah-shared/events/PlayerEventTypes";
+import EventEmitter from 'events';
+export class GameManager extends EventEmitter{
 
     private currentGames = new Map<string, Game>();
 

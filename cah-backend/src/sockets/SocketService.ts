@@ -12,6 +12,7 @@ class SocketService {
   public bind(io: Server, gameManager: GameManager) {
     this.io = io;
     this.gameManager = gameManager;
+    this.startListening();
   }
 
   public emit(emitter, ...args) {
@@ -59,7 +60,7 @@ class SocketService {
     return this.io;
   }
 
-  public startListening() {
+  private startListening() {
     startListening();
   }
 }

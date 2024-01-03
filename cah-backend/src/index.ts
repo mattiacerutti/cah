@@ -15,7 +15,6 @@ const io = new Server(httpServer, {
 let gameManager = new GameManager();
 
 socketService.bind(io, gameManager);
-socketService.startListening();
 
 const PORT = 3000;
 httpServer.listen(PORT, () => {

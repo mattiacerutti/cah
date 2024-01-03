@@ -1,5 +1,6 @@
 
 import { readFileSync } from 'fs';
+import EventEmitter from 'events';
 
 const DATA_PATH = '../../data/gameData.json';
 const MAX_PLAYERS = 8;
@@ -14,7 +15,7 @@ export enum GameState{
     COUNTING_POINTS,
     FINISHED
 }
-export class Game{
+export class Game extends EventEmitter{
 
     private players: Map<string, number> = new Map<string, number>(); //Maps player to points
     private host: string|null = null;
@@ -28,6 +29,7 @@ export class Game{
 
     
     constructor(host: string){
+        super();
         this.host = host;
         this.players.set(host, 0);
     }
@@ -79,7 +81,7 @@ export class Game{
 
         let whiteCards: Map<string, string[]> = this.getNewWhiteCards();
 
-        
+
 
     }
 

@@ -3,8 +3,8 @@
     import { currentGameStore, updateCurrentGame } from "@/stores/currentGameStore";
 	import { get } from "svelte/store";
 	import { socketService } from "@/services/socketService";
-    import { type StartGameData,  PlayerEventTypes, PlayerEventErrors} from "cah-shared/enums/PlayerEventTypes";
-    import { LobbyEventTypes } from "cah-shared/enums/LobbyEventTypes";
+    import { type StartGameData,  PlayerEventTypes, PlayerEventErrors} from "cah-shared/events/PlayerEventTypes";
+    import { LobbyEventTypes } from "cah-shared/events/LobbyEventTypes";
 	import { onDestroy } from "svelte";
     import {type SocketResponse} from "cah-shared/enums/SocketResponse";
 

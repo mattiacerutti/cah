@@ -3,14 +3,14 @@ import {
   PlayerEventTypes,
   PlayerEventErrors,
   JoinGameData,
-} from "cah-shared/enums/PlayerEventTypes";
+} from "cah-shared/events/PlayerEventTypes";
 import {
   LobbyEventTypes,
   PlayerJoinedData,
   PlayerLeftData,
   GameCreatedData,
   GameStartedData,
-} from "cah-shared/enums/LobbyEventTypes";
+} from "cah-shared/events/LobbyEventTypes";
 import { GameManager } from "../managers/GameManager";
 import { socketService } from "./SocketService";
 import { SocketResponse } from "cah-shared/enums/SocketResponse";
