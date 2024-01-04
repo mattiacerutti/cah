@@ -1,7 +1,10 @@
 import { Server, Socket } from "socket.io";
 import { toMap, toObject } from "cah-shared/utils";
 import { GameManager } from "@/managers/GameManager";
-import { startListeningToNetworkEvents, startListeningToGameEvents } from "./socketHandlers";
+import {
+  startListeningToNetworkEvents,
+  startListeningToGameEvents,
+} from "./socketHandlers";
 
 type EventCallback = (...args: unknown[]) => void;
 
@@ -14,6 +17,18 @@ class SocketService {
     this.gameManager = gameManager;
     startListeningToNetworkEvents();
     startListeningToGameEvents();
+  }
+
+  public deleteRoom(roomId: string) {
+    const sockets = this.io.sockets.adapter.rooms.get(roomId);
+
+    if (sockets) {
+      // Make each socket leave the room
+      for (const socketId of sockets) {
+        const socket = this.io.sockets.sockets.get(socketId);
+        socket.leave(roomId);
+      }
+    }
   }
 
   public emit(emitter, ...args) {
@@ -60,7 +75,6 @@ class SocketService {
     }
     return this.io;
   }
-
 }
 
 export const socketService = new SocketService();

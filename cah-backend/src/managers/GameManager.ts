@@ -1,27 +1,36 @@
-import { Game, GameState } from "../models/Game";
+import { Game } from "../models/Game";
 import Crypto from "crypto";
-import { PlayerEventErrors } from "cah-shared/events/PlayerEventTypes";
+import { PlayerEventErrors } from "cah-shared/events/frontend/PlayerEventTypes";
 import EventEmitter from "events";
-import { GameData, GameEvent } from "@/events/GameEvents";
+import { InternalGameEvent, InternalGameEventData, InternalGameEventTypes } from "@/events/InternalGameEvents";
+import { socketService } from "../sockets/SocketService";
+
+const MIN_PLAYERS = 2;
+
 export class GameManager extends EventEmitter {
   private currentGames = new Map<string, Game>();
+  private currentPlayers = new Map<string, string>();
   private gameListeners = new Map<string, (...args: any[]) => void>();
 
   public createGame(host: string): string {
     let id = Crypto.randomUUID();
     let game: Game = new Game(host);
+
     this.currentGames.set(id, game);
 
-    // Forward game events to the socket service
-    const listener = (event: GameData) => {
+    //Add player to players map
+    this.currentPlayers.set(host, id);
 
-        let gameEvent: GameEvent = {
+    // Forward game events to the socket service
+    const listener = (gameEvent : {data: InternalGameEventData, event: InternalGameEventTypes}) => {
+
+        let internalGameEvent: InternalGameEvent = {
             gameId: id,
-            event: event.event,
-            data: event
+            eventType: gameEvent.event,
+            data: gameEvent.data
         }
 
-      this.emit("game-event", gameEvent);
+      this.emit("game-event", internalGameEvent);
     };
 
     // Subscribe to the game event
@@ -36,9 +45,15 @@ export class GameManager extends EventEmitter {
   }
 
   public deleteGame(id: string) {
-    //TODO: Implement error
 
+    // Check if game exists
+    if(!this.currentGames.has(id)) throw new Error(PlayerEventErrors.gameNotFound);
+
+    // Retrieve the game
     let game = this.currentGames.get(id);
+
+    // TODO: Notify the game that it is being deleted
+
 
     // Retrieve the listener and unsubscribe
     const listener = this.gameListeners.get(id);
@@ -49,42 +64,82 @@ export class GameManager extends EventEmitter {
     // Final clean up
     this.gameListeners.delete(id);
     this.currentGames.delete(id);
+    socketService.deleteRoom(id);
+    console.log("Successfully deleted game with id: " + id);
   }
 
   public addPlayerToGame(id: string, playerId: string) {
-    //TODO: Implement error
+
+    //Check if game exists
+    if(!this.currentGames.has(id)) throw new Error(PlayerEventErrors.gameNotFound);
+
+    //Check if player is already in game
+    if(this.currentGames.get(id)?.getPlayers().has(playerId)) throw new Error(PlayerEventErrors.playerAlreadyInGame);
+
+    // Add player to game
     this.currentGames.get(id)?.addPlayer(playerId);
+
+    // Add player to players map
+    this.currentPlayers.set(playerId, id);
   }
 
-  public removePlayerFromGame(id: string, playerId: string) {
-    //TODO: Implement error
+  public removePlayerFromGame(id: string, playerId: string): boolean {
 
+    //Check if game exists
+    if(!this.currentGames.has(id)) throw new Error(PlayerEventErrors.gameNotFound);
+
+    //Check if player is in game
+    if(!this.currentGames.get(id)?.getPlayers().has(playerId)) throw new Error(PlayerEventErrors.playerNotInGame);
+
+
+    //If the game hasn't enough players, delete it
+    if (this.currentGames.get(id)?.getPlayers().size <= MIN_PLAYERS) {
+      console.log("Game " + id + " has not enough players, deleting it");
+      this.deleteGame(id);
+      return true;
+    }
+
+    //Remove player from game
     this.currentGames.get(id)?.removePlayer(playerId);
+    
+    //Remove player from players map
+    this.currentPlayers.delete(playerId);
 
+    //If the player is the host, than switch
     if (this.currentGames.get(id)?.getHost() == playerId) {
       this.currentGames.get(id)?.switchHost();
     }
-
-    if (this.currentGames.get(id)?.getPlayers().size == 0) {
-      this.deleteGame(id);
-      console.log("Deleted game with id: " + id);
-    }
+    
+    return false;
   }
 
-  public startGame(id: string) {
+  public startGame(id: string, playerId: string) {
+    // Check if game exists
     let game = this.currentGames.get(id);
 
     if (!game) throw new Error(PlayerEventErrors.gameNotFound);
+    // Check if game has a host
+    if (game.getHost() != playerId) throw new Error(PlayerEventErrors.notHost);
 
-    if (game.getHost() == null) throw new Error(PlayerEventErrors.genericError);
-
-    if (game.getPlayers().size < 3)
+    if (game.getPlayers().size < MIN_PLAYERS)
       throw new Error(PlayerEventErrors.notEnoughPlayers);
 
     this.currentGames.get(id)?.initializeGameStart();
   }
 
-  public getGame(id: string): Game | undefined {
+  public purgePlayer(playerId: string): string|null {
+    // Remove player from all games
+    let gameId: string = this.currentPlayers.get(playerId);
+    if (gameId) {
+      console.log("Purging player " + playerId + " from game " + gameId);
+      this.removePlayerFromGame(gameId, playerId);
+      return gameId;
+    }
+  }
+
+  public getGame(id: string): Game {
+    if (!this.currentGames.has(id)) throw new Error(PlayerEventErrors.gameNotFound);
+
     return this.currentGames.get(id);
   }
 }

@@ -14,6 +14,8 @@ export enum PlayerEventErrors{
     playerAlreadyInGame = 'player-already-in-game',
     playerNotInGame = 'player-not-in-game',
     notHost = 'not-host',
+    playerNotFound = 'player-not-found',
+    forbiddenAction = 'forbidden-action',
 }
 export interface CreateGameData{
     playerId: string,

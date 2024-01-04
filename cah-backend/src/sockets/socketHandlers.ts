@@ -3,89 +3,150 @@ import {
   PlayerEventTypes,
   PlayerEventErrors,
   JoinGameData,
-} from "cah-shared/events/PlayerEventTypes";
+} from "cah-shared/events/frontend/PlayerEventTypes";
 import {
   LobbyEventTypes,
   PlayerJoinedData,
   PlayerLeftData,
   GameCreatedData,
-  GameStartedData,
-} from "cah-shared/events/LobbyEventTypes";
+} from "cah-shared/events/backend/LobbyEvents";
 import { socketService } from "./SocketService";
-import { SocketResponse } from "cah-shared/enums/SocketResponse";
-import { GameData, GameEvent, GameEventTypes } from "@/events/GameEvents";
+import { SocketResponse, errorOccured } from "cah-shared/enums/SocketResponse";
+import {
+  InternalGameEvent,
+  InternalGameEventTypes,
+  NewRoundEventData,
+} from "../events/InternalGameEvents";
+import {
+  GameEventErrors,
+  GameEventTypes,
+  NewRoundData,
+} from "cah-shared/events/backend/GameEvents";
+import { Game } from "@/models/Game";
 
-let activeConnections = new Map<
-  string,
-  { playerId: string; gameId: string | undefined }
->();
+let activeConnectionsBySocket = new Map<string, { playerId: string }>();
+
+let activeConnectionsByPlayer = new Map<string, { socketId: string }>();
+
+function isPlayerActingOnHimself(socketId: string, playerId: string): boolean {
+  let player = activeConnectionsBySocket.get(socketId);
+  if (!player) throw new Error(PlayerEventErrors.playerNotFound);
+  return player.playerId == playerId;
+}
+
+function insertPlayerIntoActiveConnections(socketId: string, playerId: string) {
+  activeConnectionsByPlayer.delete(playerId);
+  activeConnectionsBySocket.delete(socketId);
+
+  activeConnectionsBySocket.set(socketId, {
+    playerId: playerId,
+  });
+
+  activeConnectionsByPlayer.set(playerId, {
+    socketId: socketId,
+  });
+}
 
 export function startListeningToGameEvents() {
   let io = socketService.getIO();
   let gameManager = socketService.getGameManager();
 
-  gameManager.on("game-event", (event: GameEvent) => {
-    
-    let gameId: string = event.gameId;
-    let gameEvent: GameEventTypes = event.event;
+  gameManager.on("game-event", (internalGameEvent: InternalGameEvent) => {
+    let gameId: string = internalGameEvent.gameId;
+    let gameEvent: InternalGameEventTypes = internalGameEvent.eventType;
 
-    console.log("Game event: " + event.event);
+    console.log("Received game event: " + gameEvent + " for game " + gameId);
 
+    switch (gameEvent) {
+      case InternalGameEventTypes.initGame:
+        let gameData = internalGameEvent.data as NewRoundEventData;
 
+        let zarSocketId = activeConnectionsByPlayer.get(gameData.zar)?.socketId;
+        let zarSocket = io.sockets.sockets.get(zarSocketId);
+
+        if (!zarSocket) {
+          let dataToSend: SocketResponse<any> = {
+            success: false,
+            error: {
+              code: GameEventErrors.cantReachZar,
+              message:
+                "Can't establish a connection to zar. Please restart the game",
+            },
+          };
+          socketService.emit(
+            io.to(gameId),
+            LobbyEventTypes.gameStarted,
+            dataToSend
+          );
+          return;
+        }
+
+        // Send data to the zar. He doesn't recive the cards.
+        let dataToSend: SocketResponse<NewRoundData> = {
+          success: true,
+          data: {
+            round: gameData.round,
+            zar: gameData.zar,
+          },
+        };
+
+        socketService.emit(zarSocket, GameEventTypes.initGame, dataToSend);
+
+        dataToSend = {
+          success: true,
+          data: {
+            round: gameData.round,
+            blackCard: gameData.blackCard,
+            whiteCards: gameData.whiteCards,
+            zar: gameData.zar,
+          },
+        };
+
+        socketService.emit(
+          zarSocket.to(gameId),
+          GameEventTypes.initGame,
+          dataToSend
+        );
+
+        break;
+    }
   });
 }
 
 export function startListeningToNetworkEvents() {
-
   socketService.subscribe(null, "connection", (socket: any) => {
-
     let io = socketService.getIO();
     let gameManager = socketService.getGameManager();
 
-    let userId: string = socket.handshake.query.playerId as string;
+    let playerId = socket.handshake.query.playerId;
 
-    activeConnections.set(socket.id, {
-      playerId: userId,
-      gameId: undefined,
-    });
+    insertPlayerIntoActiveConnections(socket.id, playerId);
 
     socketService.subscribe(socket, PlayerEventTypes.JoinGame, (data: any) => {
       console.log("Player " + data.playerId + " wants to join " + data.gameId);
 
-      let game = gameManager.getGame(data.gameId);
+      let game: Game;
+      try {
+        if (!isPlayerActingOnHimself(socket.id, data.playerId))
+          throw new Error(PlayerEventErrors.forbiddenAction);
 
-      // Check existance of game.
-      if (!game) {
+        // Check if the game exists
+        game = gameManager.getGame(data.gameId);
+
+        // Add the player to the game
+        gameManager.addPlayerToGame(data.gameId, data.playerId);
+      } catch (e) {
         let dataToSend: SocketResponse<any> = {
+          requestId: data.requestId,
           success: false,
           error: {
-            code: PlayerEventErrors.gameNotFound,
-            message: "Game not found",
+            code: e.message,
+            message: e.message,
           },
         };
-        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
+        socketService.emit(socket, errorOccured, dataToSend);
         return;
       }
-
-      if (game.isPlayerInGame(data.playerId)) {
-        let dataToSend: SocketResponse<any> = {
-          success: false,
-          error: {
-            code: PlayerEventErrors.playerAlreadyInGame,
-            message: "Player already in the game",
-          },
-        };
-        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
-        return;
-      }
-
-      // Add the player to the game
-      gameManager.addPlayerToGame(data.gameId, data.playerId);
-
-      activeConnections.set(socket.id, {
-        playerId: data.playerId,
-        gameId: data.gameId,
-      });
 
       // Put the socket in the right group (for emitting purposes)
       socket.join(data.gameId);
@@ -100,8 +161,6 @@ export function startListeningToNetworkEvents() {
         },
       };
 
-      console.log("amogus " + dataToSend.data.players.size);
-
       // Emit the event to the players
       socketService.emit(
         io.to(data.gameId),
@@ -111,42 +170,36 @@ export function startListeningToNetworkEvents() {
     });
 
     socketService.subscribe(socket, PlayerEventTypes.LeaveGame, (data: any) => {
-      // Check existance of game.
-      if (!gameManager.getGame(data.gameId)) {
+      let game: Game;
+
+
+      
+      try {
+        if (!isPlayerActingOnHimself(socket.id, data.playerId))
+          throw new Error(PlayerEventErrors.forbiddenAction);
+
+        // Retrive the game
+        game = gameManager.getGame(data.gameId);
+
+        // Remove the player from the game
+        gameManager.removePlayerFromGame(data.gameId, data.playerId);
+      } catch (e) {
         let dataToSend: SocketResponse<any> = {
+          requestId: data.requestId,
           success: false,
           error: {
-            code: PlayerEventErrors.gameNotFound,
-            message: "Game not found",
+            code: e.message,
+            message: e.message,
           },
         };
-        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
+        socketService.emit(socket, errorOccured, dataToSend);
         return;
       }
 
-      let game = gameManager.getGame(data.gameId);
+      activeConnectionsByPlayer.delete(data.playerId);
+      activeConnectionsBySocket.delete(socket.id);
 
-      // Add the player to the game
-      gameManager.removePlayerFromGame(data.gameId, data.playerId);
-
-      if (!game.isPlayerInGame(data.playerId)) {
-        let dataToSend: SocketResponse<any> = {
-          success: false,
-          error: {
-            code: PlayerEventErrors.playerNotInGame,
-            message: "This player is not in the game",
-          },
-        };
-        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
-        return;
-      }
-
-      activeConnections.set(socket.id, {
-        playerId: data.playerId,
-        gameId: undefined,
-      });
-
-      // Put the socket in the right group (for emitting purposes)
+      // Leave the socket room
       socket.leave(data.gameId);
 
       let dataToSend: SocketResponse<PlayerLeftData> = {
@@ -154,8 +207,8 @@ export function startListeningToNetworkEvents() {
         data: {
           playerId: data.playerId,
           gameId: data.gameId,
-          players: gameManager.getGame(data.gameId)?.getPlayers(),
-          host: gameManager.getGame(data.gameId)?.getHost(),
+          players: game.getPlayers(),
+          host: game.getHost(),
         },
       };
 
@@ -171,13 +224,22 @@ export function startListeningToNetworkEvents() {
       socket,
       PlayerEventTypes.CreateGame,
       (data: any) => {
-        // Create the game
-        let gameId = gameManager.createGame(data.playerId);
-
-        activeConnections.set(socket.id, {
-          playerId: data.playerId,
-          gameId: gameId,
-        });
+        let gameId: string;
+        try {
+          // Create the game
+          gameId = gameManager.createGame(data.playerId);
+        } catch (e) {
+          let dataToSend: SocketResponse<any> = {
+            requestId: data.requestId,
+            success: false,
+            error: {
+              code: e.message,
+              message: e.message,
+            },
+          };
+          socketService.emit(socket, errorOccured, dataToSend);
+          return;
+        }
 
         // Put the socket in the right group (for emitting purposes)
         socket.join(gameId);
@@ -194,90 +256,65 @@ export function startListeningToNetworkEvents() {
       }
     );
 
-    socketService.subscribe(socket, "disconnect", () => {
-      let playerId: string = activeConnections.get(socket.id)
-        ?.playerId as string;
-      let gameId: string | undefined = activeConnections.get(socket.id)
-        ?.gameId as string | undefined;
-
-      console.log("Player " + playerId + " wants to disconnect from " + gameId);
-
-      activeConnections.delete(socket.id);
-
-      if (gameId) {
-        let game = gameManager.getGame(gameId);
-        if (game) {
-          gameManager.removePlayerFromGame(gameId, playerId);
-
-          let dataToSend: SocketResponse<PlayerLeftData> = {
-            success: true,
-            data: {
-              playerId: playerId,
-              gameId: gameId,
-              players: gameManager.getGame(gameId)?.getPlayers(),
-              host: gameManager.getGame(gameId)?.getHost(),
-            },
-          };
-
-          socketService.emit(
-            io.to(gameId),
-            LobbyEventTypes.playerLeft,
-            dataToSend
-          );
-        }
-      }
-    });
-
     socketService.subscribe(socket, PlayerEventTypes.StartGame, (data: any) => {
-      let game = gameManager.getGame(data.gameId);
-
-      if (!game) {
-        let dataToSend: SocketResponse<any> = {
-          success: false,
-          error: {
-            code: PlayerEventErrors.gameNotFound,
-            message: "Game not found",
-          },
-        };
-        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
-        return;
-      }
-
-      if (game.getHost() != data.playerId) {
-        let dataToSend: SocketResponse<any> = {
-          success: false,
-          error: {
-            code: PlayerEventErrors.notHost,
-            message: "User is not the host of the game. Can't start game",
-          },
-        };
-        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
-        return;
-      }
-
       try {
-        gameManager.startGame(data.gameId);
+        // Start the game
+        gameManager.startGame(data.gameId, data.playerId);
       } catch (e) {
         let dataToSend: SocketResponse<any> = {
+          requestId: data.requestId,
           success: false,
           error: {
             code: e.message,
             message: e.message,
           },
         };
-        socketService.emit(socket, LobbyEventTypes.gameStarted, dataToSend);
+        socketService.emit(socket, errorOccured, dataToSend);
         return;
       }
 
-      let dataToSend: SocketResponse<any> = {
+      // let dataToSend: SocketResponse<any> = {
+      //   success: true,
+      // };
+
+      // socketService.emit(
+      //   io.to(data.gameId),
+      //   LobbyEventTypes.gameStarted,
+      //   dataToSend
+      // );
+    });
+
+    socketService.subscribe(socket, "disconnect", () => {
+      let playerId: string = activeConnectionsBySocket.get(socket.id)
+        ?.playerId as string;
+
+      activeConnectionsBySocket.delete(socket.id);
+      activeConnectionsByPlayer.delete(playerId);
+
+      let game: Game;
+      let gameId: string;
+
+      try {
+        // Purge player from the data
+        gameId = gameManager.purgePlayer(playerId);
+
+        game = gameManager.getGame(gameId);
+
+      } catch (e) {
+        return;
+      }
+
+      let dataToSend: SocketResponse<PlayerLeftData> = {
         success: true,
+        data: {
+          playerId: playerId,
+          gameId: gameId,
+          players: game.getPlayers(),
+          host: game.getHost(),
+        },
       };
 
-      socketService.emit(
-        io.to(data.gameId),
-        LobbyEventTypes.gameStarted,
-        dataToSend
-      );
+      socketService.emit(io.to(gameId), LobbyEventTypes.playerLeft, dataToSend);
     });
   });
 }

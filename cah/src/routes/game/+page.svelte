@@ -1,116 +1,90 @@
 <script lang="ts">
-	import {PlayerEventTypes} from "cah-shared/events/PlayerEventTypes";
-	import type  {JoinGameData, CreateGameData} from 'cah-shared/events/PlayerEventTypes';
-	import {type PlayerJoinedData, type GameCreatedData, LobbyEventTypes, type PlayerLeftData} from "cah-shared/events/LobbyEventTypes";
-	import {onMount} from "svelte";
-	import { socketService } from "@/services/socketService";
-	import { get } from "svelte/store";
-	import { playerStore } from "@/stores/playerStore";
-	import { currentGameStore } from "@/stores/currentGameStore";
+	import {
+		type PlayerJoinedData,
+		type GameCreatedData,
+		LobbyEventTypes,
+		type PlayerLeftData
+	} from 'cah-shared/events/backend/LobbyEvents';
+	import { onMount } from 'svelte';
+	import { socketService } from '@/services/socketService';
+	import { get } from 'svelte/store';
+	import { playerStore } from '@/stores/playerStore';
+	import { currentGameStore } from '@/stores/currentGameStore';
 
-	import JoinGame from "@/pages/JoinGamePage.svelte";
-	import GameLobby from "@/pages/GameLobby.svelte";
-	import { type SocketResponse } from "cah-shared/enums/SocketResponse";
+	import JoinGame from '@/pages/JoinGamePage.svelte';
+	import { type SocketResponse } from 'cah-shared/enums/SocketResponse';
+	import Game from '@/pages/Game.svelte';
 
-	let gameCode: string = '';
-    const playerId: string = get(playerStore).playerId; // Get current value of the player store
-
+	const playerId: string = get(playerStore).playerId; // Get current value of the player store
 	let isInGame: boolean = false;
 
-	console.log("Your player id is: ", playerId);
+	console.log('Your player id is: ', playerId);
 
 	onMount(() => {
 		//Connect to socket
 		socketService.connect();
 	});
 
-	const createGame = () => {
-		socketService.emit(PlayerEventTypes.CreateGame, {});
-	};
+	socketService.subscribe(
+		LobbyEventTypes.gameCreated,
+		(response: SocketResponse<GameCreatedData>) => {
+			let data = response.data;
+			// Copy the code to the clipboard
+			navigator.clipboard.writeText(data.gameId);
 
-	const joinGame = () => {
-
-		let data: JoinGameData = {
-			gameId: gameCode,
-		};
-
-		socketService.emit(PlayerEventTypes.JoinGame, data);
-	};
-
-	socketService.subscribe(LobbyEventTypes.gameCreated, (response: SocketResponse<GameCreatedData>) => {
-		if(!response.success) {
-			alert(response.error.code)
-			return;
-		}
-		let data = response.data;
-		// Copy the code to the clipboard
-		navigator.clipboard.writeText(data.gameId);
-
-		alert(`Game created!`);
-
-		$currentGameStore.gameId = data.gameId;
-		$currentGameStore.host = playerId;
-		$currentGameStore.players.set(playerId, 0);
-
-
-		isInGame = true;
-	});
-
-	socketService.subscribe(LobbyEventTypes.playerJoined, (response: SocketResponse<PlayerJoinedData>) => {
-
-		if(!response.success) {
-			alert(response.error.code)
-			return;
-		}
-		let data = response.data;
-
-		if(data.playerId === playerId) {
-			alert("You joined the game!");
+			alert(`Game created!`);
 
 			$currentGameStore.gameId = data.gameId;
-			$currentGameStore.host = data.host;
-			$currentGameStore.players = data.players;
+			$currentGameStore.host = playerId;
+			$currentGameStore.players.set(playerId, 0);
 
 			isInGame = true;
-			return
-		} 
-		console.log(`Player ${data.playerId} joined the game!`);
-
-		$currentGameStore.players = data.players;
-
-	});
-
-	socketService.subscribe(LobbyEventTypes.playerLeft, (response: SocketResponse<PlayerLeftData>) => {
-
-		if(!response.success) {
-			alert(response.error.code)
-			return;
 		}
+	);
 
-		let data = response.data;
+	socketService.subscribe(
+		LobbyEventTypes.playerJoined,
+		(response: SocketResponse<PlayerJoinedData>) => {
+			let data = response.data;
 
-		if(data.playerId === playerId) {
-			return
-		} 
-		
-		console.log(`Player ${data.playerId} left the game!`);
+			if (data.playerId === playerId) {
+				alert('You joined the game!');
 
-		$currentGameStore.host = data.host;
-		$currentGameStore.players = data.players;
+				$currentGameStore.gameId = data.gameId;
+				$currentGameStore.host = data.host;
+				$currentGameStore.players = data.players;
 
-	});
+				isInGame = true;
+				return;
+			}
+			console.log(`Player ${data.playerId} joined the game!`);
+
+			$currentGameStore.players = data.players;
+		}
+	);
+
+	socketService.subscribe(
+		LobbyEventTypes.playerLeft,
+		(response: SocketResponse<PlayerLeftData>) => {
+			let data = response.data;
+
+			if (data.playerId === playerId) {
+				return;
+			}
+
+			console.log(`Player ${data.playerId} left the game!`);
+
+			$currentGameStore.host = data.host;
+			$currentGameStore.players = data.players;
+		}
+	);
+
+
 
 </script>
 
 {#if !isInGame}
-	<JoinGame  bind:gameCode={gameCode} joinGame={joinGame} createGame={createGame}/>
+	<JoinGame />
 {:else}
-{#if !$currentGameStore.gameStarted}
-	<GameLobby/>
-	{:else}
-		started
-	{/if}
+	<Game />
 {/if}
-
-
-

@@ -5,7 +5,8 @@ export const currentGameStore = writable({
     players: new Map<string, number>(),  
     gameId: null,
     gameStarted: false,
-    gameTurn: 0,
+    gameRound: 0,
+    isZar: false,
 });
 
 export function updateCurrentGame() {
@@ -14,7 +15,7 @@ export function updateCurrentGame() {
     });
 }
 
-export function updatePlayers(playerId, score) {
+export function updatePlayers(playerId: string, score: number) {
     currentGameStore.update(currentGame => {
         // Check if currentGame.players is a Map and create a new one if it is
         const updatedPlayers = currentGame.players instanceof Map

@@ -3,10 +3,9 @@
     import { currentGameStore, updateCurrentGame } from "@/stores/currentGameStore";
 	import { get } from "svelte/store";
 	import { socketService } from "@/services/socketService";
-    import { type StartGameData,  PlayerEventTypes, PlayerEventErrors} from "cah-shared/events/PlayerEventTypes";
-    import { LobbyEventTypes } from "cah-shared/events/LobbyEventTypes";
-	import { onDestroy } from "svelte";
-    import {type SocketResponse} from "cah-shared/enums/SocketResponse";
+    import { type StartGameData,  PlayerEventTypes, PlayerEventErrors} from "cah-shared/events/frontend/PlayerEventTypes";
+	import { LobbyEventTypes } from "cah-shared/events/backend/LobbyEvents";
+
 
     let currentGame: any;
     let mapToArray: Array<any> = [];
@@ -23,23 +22,17 @@
             gameId: currentGame.gameId,
         };
 
-        socketService.emit(PlayerEventTypes.StartGame, data);
+        socketService.emit(PlayerEventTypes.StartGame, data, (error) => {
+            alert(error.message);
+        });
     };
 
-    socketService.subscribe(LobbyEventTypes.gameStarted, (response: SocketResponse<any>) => {
-        if(!response.success) {
-			alert(response.error.code)
-			return;
-		}
-		let data = response.data;
-        $currentGameStore.gameStarted = true;
-        alert("Game started!");
+    socketService.subscribe(LobbyEventTypes.gameStarted, (response: any) => {
+        if (!response.success) {
+            alert(response.error.code);
+            return;
+        }
     });
-
-    onDestroy(() => {
-        socketService.unsubscribe(LobbyEventTypes.gameStarted);
-    });
-
 
 
 </script>
