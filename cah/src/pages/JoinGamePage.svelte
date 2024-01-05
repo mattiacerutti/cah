@@ -1,9 +1,16 @@
 <script lang="ts">
 	import TextField from '@/components/TextField.svelte';
 	import { socketService } from '@/services/socketService';
-	import { type JoinGameData, PlayerEventTypes } from 'cah-shared/events/frontend/PlayerEventTypes';
+	import { currentGameStore } from '@/stores/currentGameStore';
+	import { playerStore } from '@/stores/playerStore';
+	import { type SocketResponse } from 'cah-shared/enums/SocketResponse';
+	import { type GameCreatedData, LobbyEventTypes } from 'cah-shared/events/backend/LobbyEvents';
+	import { type JoinGameData, PlayerEventTypes } from 'cah-shared/events/frontend/PlayerEvents';
+	import { onDestroy } from 'svelte';
 
 	let gameCode: string = '';
+
+    export let isInGame: boolean = false;
 
 	const createGame = () => {
 		socketService.emit(PlayerEventTypes.CreateGame, null, (error) => {
@@ -20,6 +27,28 @@
 			alert("sus " + error.message);
 		});
 	};
+
+    socketService.subscribe(
+		LobbyEventTypes.gameCreated,
+		(response: SocketResponse<GameCreatedData>) => {
+			let data = response.data;
+			// Copy the code to the clipboard
+			navigator.clipboard.writeText(data.gameId);
+
+			alert(`Game created!`);
+
+			$currentGameStore.gameId = data.gameId;
+			$currentGameStore.host = $playerStore.playerId;
+			$currentGameStore.players.set($playerStore.playerId, 0);
+
+			isInGame = true;
+		}
+	);
+
+    onDestroy(() => {
+        socketService.unsubscribe(LobbyEventTypes.gameCreated);
+    
+    });
 </script>
 
 <div class="w-screen h-screen flex justify-center items-center flex-col gap-8">

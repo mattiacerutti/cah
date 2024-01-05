@@ -1,6 +1,7 @@
 export enum InternalGameEventTypes {
   initGame = "init-game",
   newRound = "new-round",
+  gameDeleted = "game-deleted",
 }
 
 // Interface for events from the GameManager

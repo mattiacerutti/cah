@@ -147,6 +147,10 @@ export class Game extends EventEmitter {
     return this.players;
   }
 
+  public isStarted(): boolean {
+    return this.gameState != GameState.LOBBY && this.gameState != GameState.FINISHED;
+  }
+
   public getHost(): string | null {
     return this.host;
   }

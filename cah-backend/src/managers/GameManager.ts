@@ -1,9 +1,8 @@
 import { Game } from "../models/Game";
 import Crypto from "crypto";
-import { PlayerEventErrors } from "cah-shared/events/frontend/PlayerEventTypes";
+import { PlayerEventErrors } from "cah-shared/events/frontend/PlayerEvents";
 import EventEmitter from "events";
-import { InternalGameEvent, InternalGameEventData, InternalGameEventTypes } from "@/events/InternalGameEvents";
-import { socketService } from "../sockets/SocketService";
+import { InternalGameEvent, InternalGameEventData, InternalGameEventTypes } from "../events/InternalGameEvents";
 
 const MIN_PLAYERS = 2;
 
@@ -52,8 +51,12 @@ export class GameManager extends EventEmitter {
     // Retrieve the game
     let game = this.currentGames.get(id);
 
-    // TODO: Notify the game that it is being deleted
-
+    // Notify the game that it is being deleted
+    this.emit("game-event", {
+        gameId: id,
+        eventType: InternalGameEventTypes.gameDeleted,
+        data: {}
+    });
 
     // Retrieve the listener and unsubscribe
     const listener = this.gameListeners.get(id);
@@ -64,7 +67,6 @@ export class GameManager extends EventEmitter {
     // Final clean up
     this.gameListeners.delete(id);
     this.currentGames.delete(id);
-    socketService.deleteRoom(id);
     console.log("Successfully deleted game with id: " + id);
   }
 
@@ -92,8 +94,8 @@ export class GameManager extends EventEmitter {
     if(!this.currentGames.get(id)?.getPlayers().has(playerId)) throw new Error(PlayerEventErrors.playerNotInGame);
 
 
-    //If the game hasn't enough players, delete it
-    if (this.currentGames.get(id)?.getPlayers().size <= MIN_PLAYERS) {
+    //If the game is started and it doesn't have enough players, delete it
+    if (this.currentGames.get(id)?.getPlayers().size <= MIN_PLAYERS && this.currentGames.get(id)?.isStarted()) {
       console.log("Game " + id + " has not enough players, deleting it");
       this.deleteGame(id);
       return true;

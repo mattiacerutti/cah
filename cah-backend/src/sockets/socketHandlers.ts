@@ -3,12 +3,13 @@ import {
   PlayerEventTypes,
   PlayerEventErrors,
   JoinGameData,
-} from "cah-shared/events/frontend/PlayerEventTypes";
+} from "cah-shared/events/frontend/PlayerEvents";
 import {
   LobbyEventTypes,
   PlayerJoinedData,
   PlayerLeftData,
   GameCreatedData,
+  GameDeletedData,
 } from "cah-shared/events/backend/LobbyEvents";
 import { socketService } from "./SocketService";
 import { SocketResponse, errorOccured } from "cah-shared/enums/SocketResponse";
@@ -58,7 +59,7 @@ export function startListeningToGameEvents() {
     console.log("Received game event: " + gameEvent + " for game " + gameId);
 
     switch (gameEvent) {
-      case InternalGameEventTypes.initGame:
+      case InternalGameEventTypes.initGame: {
         let gameData = internalGameEvent.data as NewRoundEventData;
 
         let zarSocketId = activeConnectionsByPlayer.get(gameData.zar)?.socketId;
@@ -109,6 +110,25 @@ export function startListeningToGameEvents() {
         );
 
         break;
+      }
+      case InternalGameEventTypes.gameDeleted: {
+        let dataToSend: SocketResponse<GameDeletedData> = {
+          success: true,
+          data: {
+            gameId: gameId,
+          },
+        };
+
+        socketService.emit(
+          io.to(gameId),
+          LobbyEventTypes.gameDeleted,
+          dataToSend
+        );
+
+        socketService.deleteRoom(gameId);
+
+        break;
+      }
     }
   });
 }
@@ -172,8 +192,6 @@ export function startListeningToNetworkEvents() {
     socketService.subscribe(socket, PlayerEventTypes.LeaveGame, (data: any) => {
       let game: Game;
 
-
-      
       try {
         if (!isPlayerActingOnHimself(socket.id, data.playerId))
           throw new Error(PlayerEventErrors.forbiddenAction);
@@ -299,7 +317,6 @@ export function startListeningToNetworkEvents() {
         gameId = gameManager.purgePlayer(playerId);
 
         game = gameManager.getGame(gameId);
-
       } catch (e) {
         return;
       }

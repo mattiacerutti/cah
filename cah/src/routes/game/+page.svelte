@@ -25,23 +25,8 @@
 		socketService.connect();
 	});
 
-	socketService.subscribe(
-		LobbyEventTypes.gameCreated,
-		(response: SocketResponse<GameCreatedData>) => {
-			let data = response.data;
-			// Copy the code to the clipboard
-			navigator.clipboard.writeText(data.gameId);
 
-			alert(`Game created!`);
-
-			$currentGameStore.gameId = data.gameId;
-			$currentGameStore.host = playerId;
-			$currentGameStore.players.set(playerId, 0);
-
-			isInGame = true;
-		}
-	);
-
+	// TODO: Divide in two events for player joined and you joined
 	socketService.subscribe(
 		LobbyEventTypes.playerJoined,
 		(response: SocketResponse<PlayerJoinedData>) => {
@@ -63,28 +48,24 @@
 		}
 	);
 
-	socketService.subscribe(
-		LobbyEventTypes.playerLeft,
-		(response: SocketResponse<PlayerLeftData>) => {
-			let data = response.data;
+	socketService.subscribe(LobbyEventTypes.gameDeleted, (response: SocketResponse<any>) => {
+		
+		alert("This game was deleted.");
 
-			if (data.playerId === playerId) {
-				return;
-			}
+		$currentGameStore.gameId = null;
+		$currentGameStore.host = null;
+		$currentGameStore.players = new Map<string, number>();
+		$currentGameStore.gameStarted = false;
+		$currentGameStore.isZar = false;
+		$currentGameStore.gameRound = 0;
 
-			console.log(`Player ${data.playerId} left the game!`);
-
-			$currentGameStore.host = data.host;
-			$currentGameStore.players = data.players;
-		}
-	);
-
-
+		isInGame = false;
+	});
 
 </script>
 
 {#if !isInGame}
-	<JoinGame />
+	<JoinGame bind:isInGame={isInGame} />
 {:else}
 	<Game />
 {/if}

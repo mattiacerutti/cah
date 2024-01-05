@@ -3,7 +3,7 @@
     import { currentGameStore, updateCurrentGame } from "@/stores/currentGameStore";
 	import { get } from "svelte/store";
 	import { socketService } from "@/services/socketService";
-    import { type StartGameData,  PlayerEventTypes, PlayerEventErrors} from "cah-shared/events/frontend/PlayerEventTypes";
+    import { type StartGameData,  PlayerEventTypes, PlayerEventErrors} from "cah-shared/events/frontend/PlayerEvents";
 	import { LobbyEventTypes } from "cah-shared/events/backend/LobbyEvents";
 
 
