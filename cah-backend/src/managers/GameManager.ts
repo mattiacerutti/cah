@@ -1,4 +1,4 @@
-import { Game } from "../models/Game";
+import { Game, GameState } from "../models/Game";
 import Crypto from "crypto";
 import { PlayerEventErrors } from "cah-shared/events/frontend/PlayerEvents";
 import EventEmitter from "events";
@@ -127,6 +127,45 @@ export class GameManager extends EventEmitter {
       throw new Error(PlayerEventErrors.notEnoughPlayers);
 
     this.currentGames.get(id)?.initializeGameStart();
+  }
+
+  public submitCard(gameId: string, playerId: string, card: string): number {
+    // Check if game exists
+    let game = this.currentGames.get(gameId);
+    if (!game) throw new Error(PlayerEventErrors.gameNotFound);
+
+    // Check if player is in game
+    if (!game.getPlayers().has(playerId))
+      throw new Error(PlayerEventErrors.playerNotInGame);
+
+    // Check if game is started
+    if (!game.isStarted()) throw new Error(PlayerEventErrors.gameNotStarted);
+
+    // Check if it's the player's turn
+    if (game.getGameStatus() != GameState.PLAYER_TURN)
+      throw new Error(PlayerEventErrors.forbiddenAction);
+
+    // Check if player has the card
+    if (!game.getPlayerWhiteCards(playerId).includes(card))
+      throw new Error(PlayerEventErrors.cardNotInPlayersHand);
+
+    // Check if player already submitted a card
+    if (game.getSumbittedCards().has(playerId))
+      throw new Error(PlayerEventErrors.alreadySubmittedACard);
+
+    // Submit the card
+    let remainingPlayers = game.registerSubmittedCard(playerId, card);
+
+    console.log("Player " + playerId + " submitted card " + card + ". Remaining players: " + remainingPlayers);
+
+    // Check if all players submitted a card
+    if (game.getSumbittedCards().size == game.getPlayers().size - 1) {
+      // All players submitted a card, start the voting phase
+      game.startVotingPhase();
+    }
+
+    return remainingPlayers;
+
   }
 
   public purgePlayer(playerId: string): string|null {

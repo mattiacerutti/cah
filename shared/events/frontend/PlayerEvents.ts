@@ -4,6 +4,7 @@ export enum PlayerEventTypes{
     JoinGame = 'join-game',
     LeaveGame = 'leave-game',
     StartGame = 'start-game',
+    SubmitCard = 'submit-card',
 }
 
 export enum PlayerEventErrors{
@@ -16,11 +17,17 @@ export enum PlayerEventErrors{
     notHost = 'not-host',
     playerNotFound = 'player-not-found',
     forbiddenAction = 'forbidden-action',
+    alreadySubmittedACard = 'already-submitted-a-card',
+    cardNotInPlayersHand = 'card-not-in-players-hand',
 }
 export interface CreateGameData{
     playerId: string,
 }
 
+export interface SubmitCardData{
+    gameId: string,
+    card: string
+}
 export interface JoinGameData{
     gameId: string,
 }

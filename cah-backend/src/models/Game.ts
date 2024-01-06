@@ -4,6 +4,7 @@ import {
   InternalGameEventData,
   InternalGameEventTypes,
   NewRoundEventData,
+  VotingPhaseEventData,
 } from "../events/InternalGameEvents";
 
 const DATA_PATH = "../../data/gameData.json";
@@ -22,11 +23,14 @@ export enum GameState {
 export class Game extends EventEmitter {
   private players: Map<string, number> = new Map<string, number>(); //Maps player to points
   private host: string | null = null;
-  private maxPlayers = MAX_PLAYERS;
 
   private currentZar: string | null = null;
   private currentRound: number = 0;
   private gameState: GameState = GameState.LOBBY;
+
+  private submittedCards: Map<string, string>|null = null;
+  private currentWhiteCards: Map<string, string[]> | null = null;
+  private currentBlackCard: string | null = null;
 
   constructor(host: string) {
     super();
@@ -69,6 +73,24 @@ export class Game extends EventEmitter {
     this.gameState = GameState.PLAYER_TURN;
   }
 
+  public registerSubmittedCard(playerId: string, card: string): number {
+    this.submittedCards.set(playerId, card);
+
+    return this.players.size - this.submittedCards.size - 1;
+  }
+
+  public startVotingPhase() {
+    let dataToSend: VotingPhaseEventData = {
+      blackCard: this.currentBlackCard,
+      chosenWhiteCards: this.submittedCards,
+      zar: this.currentZar,
+    };
+
+    this.emitEvent(dataToSend, InternalGameEventTypes.startVotingPhase);
+
+    this.gameState = GameState.ZAR_TURN;
+  }
+
   private inizializeNewRound(): NewRoundEventData {
     this.gameState = GameState.CHOOSING_ZAR;
 
@@ -78,6 +100,11 @@ export class Game extends EventEmitter {
     let blackCard: string = this.getNewBlackCard();
 
     let whiteCards: Map<string, string[]> = this.getNewWhiteCards();
+
+    this.submittedCards = new Map<string, string>();
+
+    this.currentWhiteCards = whiteCards;
+    this.currentBlackCard = blackCard;
 
     let dataToSend: NewRoundEventData = {
       round: this.currentRound,
@@ -148,7 +175,9 @@ export class Game extends EventEmitter {
   }
 
   public isStarted(): boolean {
-    return this.gameState != GameState.LOBBY && this.gameState != GameState.FINISHED;
+    return (
+      this.gameState != GameState.LOBBY && this.gameState != GameState.FINISHED
+    );
   }
 
   public getHost(): string | null {
@@ -171,4 +200,23 @@ export class Game extends EventEmitter {
     return this.gameState != GameState.LOBBY;
   }
 
+  public getSumbittedCards(): Map<string, string> {
+    return this.submittedCards;
+  }
+
+  public getCurrentWhiteCards(): Map<string, string[]> {
+    return this.currentWhiteCards;
+  }
+
+  public getPlayerWhiteCards(playerId: string): string[] {
+    return this.currentWhiteCards.get(playerId);
+  }
+
+  public getCurrentBlackCard(): string {
+    return this.currentBlackCard;
+  }
+
+  public getGameStatus(): GameState {
+    return this.gameState;
+  }
 }

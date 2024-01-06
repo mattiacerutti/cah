@@ -3,6 +3,7 @@ import {
   PlayerEventTypes,
   PlayerEventErrors,
   JoinGameData,
+  SubmitCardData,
 } from "cah-shared/events/frontend/PlayerEvents";
 import {
   LobbyEventTypes,
@@ -17,11 +18,14 @@ import {
   InternalGameEvent,
   InternalGameEventTypes,
   NewRoundEventData,
+  VotingPhaseEventData,
 } from "../events/InternalGameEvents";
 import {
+  CardSumbittedData,
   GameEventErrors,
   GameEventTypes,
   NewRoundData,
+  VotingPhaseData,
 } from "cah-shared/events/backend/GameEvents";
 import { Game } from "@/models/Game";
 
@@ -126,6 +130,59 @@ export function startListeningToGameEvents() {
         );
 
         socketService.deleteRoom(gameId);
+
+        break;
+      }
+
+      case InternalGameEventTypes.startVotingPhase: {
+        let gameData = internalGameEvent.data as VotingPhaseEventData;
+
+        let zarSocketId = activeConnectionsByPlayer.get(gameData.zar)?.socketId;
+        let zarSocket = io.sockets.sockets.get(zarSocketId);
+
+        if (!zarSocket) {
+          let dataToSend: SocketResponse<any> = {
+            success: false,
+            error: {
+              code: GameEventErrors.cantReachZar,
+              message:
+                "Can't establish a connection to zar. Please restart the game",
+            },
+          };
+          socketService.emit(
+            io.to(gameId),
+            LobbyEventTypes.gameStarted,
+            dataToSend
+          );
+          return;
+        }
+
+        let whiteCards: string[] = [...gameData.chosenWhiteCards.values()];
+
+        let dataToSend: SocketResponse<VotingPhaseData> = {
+          success: true,
+          data: {
+            blackCard: gameData.blackCard,
+            chosenWhiteCards: whiteCards,
+          },
+        };
+
+        socketService.emit(
+          zarSocket,
+          GameEventTypes.startVotingPhase,
+          dataToSend
+        );
+
+        dataToSend = {
+          success: true,
+          data: null,
+        };
+
+        socketService.emit(
+          zarSocket.to(gameId),
+          GameEventTypes.startVotingPhase,
+          dataToSend
+        );
 
         break;
       }
@@ -301,6 +358,47 @@ export function startListeningToNetworkEvents() {
       //   dataToSend
       // );
     });
+
+    socketService.subscribe(
+      socket,
+      PlayerEventTypes.SubmitCard,
+      (data: any) => {
+        let remainingPlayers: number;
+
+        try {
+          remainingPlayers = gameManager.submitCard(
+            data.gameId,
+            data.playerId,
+            data.card
+          );
+
+        } catch (e) {
+          console.log(e);
+          let dataToSend: SocketResponse<any> = {
+            requestId: data.requestId,
+            success: false,
+            error: {
+              code: e.message,
+              message: e.message,
+            },
+          };
+          socketService.emit(socket, errorOccured, dataToSend);
+        }
+
+        let dataToSend: SocketResponse<CardSumbittedData> = {
+          success: true,
+          data: {
+            playerRemaining: remainingPlayers,
+          },
+        };
+
+        socketService.emit(
+          socket,
+          GameEventTypes.cardSubmitted,
+          dataToSend
+        );
+      }
+    );
 
     socketService.subscribe(socket, "disconnect", () => {
       let playerId: string = activeConnectionsBySocket.get(socket.id)

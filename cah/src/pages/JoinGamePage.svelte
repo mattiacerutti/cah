@@ -24,7 +24,7 @@
 		};
 
 		socketService.emit(PlayerEventTypes.JoinGame, data, (error) => {
-			alert("sus " + error.message);
+			alert(error.message);
 		});
 	};
 
