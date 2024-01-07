@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "cah-shared": "file:../shared",
+    "cah-shared": "file:../cah-shared",
     "cors": "^2.8.5",
     "socket.io": "^4.7.2"
   },

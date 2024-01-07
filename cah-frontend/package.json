@@ -34,6 +34,6 @@
 	"dependencies": {
 		"autoprefixer": "^10.4.16",
 		"socket.io-client": "^4.7.2",
-		"cah-shared": "file:../shared"	
+		"cah-shared": "file:../cah-shared"	
 	}
 }
