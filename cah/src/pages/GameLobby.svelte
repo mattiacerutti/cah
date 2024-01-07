@@ -7,19 +7,15 @@
 	import { LobbyEventTypes } from "cah-shared/events/backend/LobbyEvents";
 
 
-    let currentGame: any;
     let mapToArray: Array<any> = [];
 
-    $: {
-        currentGame = $currentGameStore;
-        mapToArray = Array.from(currentGame.players as Map<string, number>, ([key, value]) => ({ key, value }));
-    }
+    $: mapToArray = Array.from($currentGameStore.players as Map<string, number>, ([key, value]) => ({ key, value }));
 
 
     const startGame = () => {
 
         let data: StartGameData = {
-            gameId: currentGame.gameId,
+            gameId: $currentGameStore.gameId,
         };
 
         socketService.emit(PlayerEventTypes.StartGame, data, (error) => {
@@ -34,6 +30,8 @@
         }
     });
 
+    
+
 
 </script>
 
@@ -43,7 +41,7 @@
         Game Code:
     </h1>
     <h2 class="text-2xl font-semibold underline">
-        {currentGame.gameId}
+        {$currentGameStore.gameId}
     </h2>
     <br>
     <br>
@@ -57,7 +55,7 @@
         </div>
     {/each}
     
-    {#if currentGame.host === get(playerStore).playerId}
+    {#if $currentGameStore.host === get(playerStore).playerId}
         <button class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8" on:click={startGame}>
             Start Game
         </button>

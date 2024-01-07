@@ -1,10 +1,18 @@
 import { writable } from 'svelte/store';
 
+export const enum GameState{
+    LOBBY,
+    PLAYING,
+    VOTING_PHASE,
+    DISPLAYING_RESULTS,
+    FINISHED,
+}
+
 export const currentGameStore = writable({
     host: null,
     players: new Map<string, number>(),  
     gameId: null,
-    gameStarted: false,
+    gameState: null,
     gameRound: 0,
     isZar: false,
 });

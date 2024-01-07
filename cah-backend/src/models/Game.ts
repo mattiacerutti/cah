@@ -8,7 +8,7 @@ import {
 } from "../events/InternalGameEvents";
 
 const DATA_PATH = "../../data/gameData.json";
-const MAX_PLAYERS = 8;
+const MAX_ROUNDS = 2;
 const WHITE_CARDS_PER_PLAYER = 6;
 
 export enum GameState {
@@ -16,8 +16,9 @@ export enum GameState {
   STARTING,
   CHOOSING_ZAR,
   PLAYER_TURN,
-  ZAR_TURN,
-  COUNTING_POINTS,
+  VOTING_PHASE,
+  ENDING_ROUND,
+  DISPLAYING_RESULTS,
   FINISHED,
 }
 export class Game extends EventEmitter {
@@ -25,10 +26,11 @@ export class Game extends EventEmitter {
   private host: string | null = null;
 
   private currentZar: string | null = null;
+  private remainingZar: string[];
   private currentRound: number = 0;
   private gameState: GameState = GameState.LOBBY;
 
-  private submittedCards: Map<string, string>|null = null;
+  private submittedCards: Map<string, string> | null = null;
   private currentWhiteCards: Map<string, string[]> | null = null;
   private currentBlackCard: string | null = null;
 
@@ -50,21 +52,16 @@ export class Game extends EventEmitter {
     this.host = this.players.keys().next().value;
   }
 
-  public nextTurn() {
-    this.currentRound++;
-  }
-
   public addPointsToPlayer(playerId: string) {
-    this.players[playerId] = this.players[playerId] + 1;
+    let currentPoints = this.players.get(playerId);
+
+    this.players.set(playerId, currentPoints + 1);
   }
 
   public initializeGameStart() {
     this.gameState = GameState.STARTING;
 
-    //Shuffle player map
-    this.players = new Map<string, number>(
-      Array.from(this.players).sort(() => Math.random() - 0.5)
-    );
+    this.remainingZar = Array.from(this.players.keys());
 
     let dataToSend: NewRoundEventData = this.inizializeNewRound();
 
@@ -88,14 +85,22 @@ export class Game extends EventEmitter {
 
     this.emitEvent(dataToSend, InternalGameEventTypes.startVotingPhase);
 
-    this.gameState = GameState.ZAR_TURN;
+    this.gameState = GameState.VOTING_PHASE;
+  }
+
+  public startNewRound() {
+    let dataToSend: NewRoundEventData = this.inizializeNewRound();
+
+    this.emitEvent(dataToSend, InternalGameEventTypes.newRound);
+
+    this.gameState = GameState.PLAYER_TURN;
   }
 
   private inizializeNewRound(): NewRoundEventData {
     this.gameState = GameState.CHOOSING_ZAR;
 
-    //Select ZAR
-    this.currentZar = this.players.keys().next().value;
+    // Get ZAR
+    this.currentZar = this.switchZar(this.currentZar);
 
     let blackCard: string = this.getNewBlackCard();
 
@@ -105,6 +110,8 @@ export class Game extends EventEmitter {
 
     this.currentWhiteCards = whiteCards;
     this.currentBlackCard = blackCard;
+
+    this.currentRound++;
 
     let dataToSend: NewRoundEventData = {
       round: this.currentRound,
@@ -162,6 +169,19 @@ export class Game extends EventEmitter {
     return whiteCardsMap;
   }
 
+  public endRound(winnerId: string): boolean {
+    //Add point to winner
+    this.addPointsToPlayer(winnerId);
+
+    //Check if game is finished
+    if (this.currentRound >= MAX_ROUNDS) {
+      this.gameState = GameState.FINISHED;
+      return true;
+    }
+
+    return false;
+  }
+
   private emitEvent(
     data: InternalGameEventData,
     event: InternalGameEventTypes
@@ -180,8 +200,73 @@ export class Game extends EventEmitter {
     );
   }
 
+  public getSubmittedCardOwner(card: string): string | null {
+    for (let [key, value] of this.submittedCards) {
+      if (value == card) {
+        return key;
+      }
+    }
+    return null;
+  }
+
+  private switchZar(previousZar: string | null = null): string {
+    // If no remaing zar, re-start the cycle
+    if (this.remainingZar.length <= 0) {
+      this.remainingZar = Array.from(this.players.keys()).sort(
+        () => Math.random() - 0.5
+      );
+      // If the first zar is same as the previous, remove it and insert it in a random position
+      if (previousZar != null && this.remainingZar[0] == previousZar) {
+        const firstElement = this.remainingZar.shift();
+        const randomIndex = Math.floor(Math.random() * (this.remainingZar.length - 1)) + 1;
+        this.remainingZar.splice(randomIndex, 0, firstElement);
+      }
+    }
+
+    // Pick the first player in the list and remove it
+    const newZar = this.remainingZar.shift();
+
+    return newZar;
+  }
+
+  public resetGame(){
+    this.currentRound = 0;
+    this.gameState = GameState.LOBBY;
+    this.currentZar = null;
+    this.currentBlackCard = null;
+    this.currentWhiteCards = null;
+    this.submittedCards = null;
+    this.remainingZar = [];
+
+    //Reset player points
+    for(let [key] of this.players){
+      this.players.set(key, 0);
+    }
+  }
+
   public getHost(): string | null {
     return this.host;
+  }
+
+  public getWinners(): string[] {
+    let winners: string[] = [];
+    let maxPoints: number = 0;
+
+    for (let [key, value] of this.players) {
+      if (value > maxPoints) {
+        maxPoints = value;
+        winners = [];
+        winners.push(key);
+      } else if (value == maxPoints) {
+        winners.push(key);
+      }
+    }
+
+    return winners;
+  }
+
+  public getZar(): string | null {
+    return this.currentZar;
   }
 
   public isPlayerInGame(playerId: string): boolean {

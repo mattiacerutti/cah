@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { socketService } from '@/services/socketService';
+	import { currentGameStore } from '@/stores/currentGameStore';
+	import { PlayerEventTypes } from 'cah-shared/events/frontend/PlayerEvents';
+
 	export let isVotingPhase: boolean = false;
 
 	export let blackCard: string = '';
@@ -32,8 +36,19 @@
 	};
 
 	const submitCard = (card: string) => {
-        //TODO: Implement
-    };
+		socketService.emit(
+			PlayerEventTypes.SubmitVote,
+			{
+				card: card,
+				gameId: $currentGameStore.gameId
+			},
+			(error) => {
+				if (error) {
+					alert('Error submitting you card: ' + error.message);
+				}
+			}
+		);
+	};
 </script>
 
 {#if !isVotingPhase}
@@ -54,12 +69,14 @@
 			>
 				←
 			</button>
+			{#if whiteCardPointer >= 0}
 			<button
 				class="bg-transparent p-2 rounded-full hover:scale-110 transition-all my-8 text-primary-blue submit-button"
 				on:click={() => submitCard(whiteCards[whiteCardPointer])}
 			>
 				✓
 			</button>
+			{/if}
 			<button
 				class="bg-transparent p-2 rounded-full hover:scale-110 transition-all my-8 text-primary-blue submit-button"
 				on:click={() => goRight()}

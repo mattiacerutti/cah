@@ -1,7 +1,7 @@
 <script lang="ts">
 	import TextField from '@/components/TextField.svelte';
 	import { socketService } from '@/services/socketService';
-	import { currentGameStore } from '@/stores/currentGameStore';
+	import { GameState, currentGameStore } from '@/stores/currentGameStore';
 	import { playerStore } from '@/stores/playerStore';
 	import { type SocketResponse } from 'cah-shared/enums/SocketResponse';
 	import { type GameCreatedData, LobbyEventTypes } from 'cah-shared/events/backend/LobbyEvents';
@@ -9,8 +9,6 @@
 	import { onDestroy } from 'svelte';
 
 	let gameCode: string = '';
-
-    export let isInGame: boolean = false;
 
 	const createGame = () => {
 		socketService.emit(PlayerEventTypes.CreateGame, null, (error) => {
@@ -41,7 +39,7 @@
 			$currentGameStore.host = $playerStore.playerId;
 			$currentGameStore.players.set($playerStore.playerId, 0);
 
-			isInGame = true;
+			$currentGameStore.gameState = GameState.LOBBY;
 		}
 	);
 

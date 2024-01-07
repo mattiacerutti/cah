@@ -9,14 +9,13 @@
 	import { socketService } from '@/services/socketService';
 	import { get } from 'svelte/store';
 	import { playerStore } from '@/stores/playerStore';
-	import { currentGameStore } from '@/stores/currentGameStore';
+	import { GameState, currentGameStore } from '@/stores/currentGameStore';
 
 	import JoinGame from '@/pages/JoinGamePage.svelte';
 	import { type SocketResponse } from 'cah-shared/enums/SocketResponse';
 	import Game from '@/pages/Game.svelte';
 
 	const playerId: string = get(playerStore).playerId; // Get current value of the player store
-	let isInGame: boolean = false;
 
 	console.log('Your player id is: ', playerId);
 
@@ -39,7 +38,7 @@
 				$currentGameStore.host = data.host;
 				$currentGameStore.players = data.players;
 
-				isInGame = true;
+				$currentGameStore.gameState = GameState.LOBBY;
 				return;
 			}
 			console.log(`Player ${data.playerId} joined the game!`);
@@ -55,17 +54,17 @@
 		$currentGameStore.gameId = null;
 		$currentGameStore.host = null;
 		$currentGameStore.players = new Map<string, number>();
-		$currentGameStore.gameStarted = false;
 		$currentGameStore.isZar = false;
 		$currentGameStore.gameRound = 0;
 
-		isInGame = false;
+		$currentGameStore.gameState = null;
+
 	});
 
 </script>
 
-{#if !isInGame}
-	<JoinGame bind:isInGame={isInGame} />
+{#if $currentGameStore.gameId === null}
+	<JoinGame />
 {:else}
 	<Game />
 {/if}

@@ -3,6 +3,7 @@ export enum GameEventTypes {
     newRound = 'new-round',
     startVotingPhase = 'start-voting-phase',
     cardSubmitted = 'card-submitted',
+    roundFinished = 'round-finished',
 }
 
 export enum GameEventErrors {
@@ -23,4 +24,11 @@ export interface VotingPhaseData {
 
 export interface CardSumbittedData{
     playerRemaining: number;
+}
+
+export interface RoundFinishedData{
+    roundWinner: string,
+    blackCard: string,
+    whiteCard: string,
+    playerMap: Map<string, number>,
 }

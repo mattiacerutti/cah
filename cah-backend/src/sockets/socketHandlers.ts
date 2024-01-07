@@ -11,13 +11,16 @@ import {
   PlayerLeftData,
   GameCreatedData,
   GameDeletedData,
+  GameFinishedData,
 } from "cah-shared/events/backend/LobbyEvents";
 import { socketService } from "./SocketService";
 import { SocketResponse, errorOccured } from "cah-shared/enums/SocketResponse";
 import {
+  GameFinishedEventData,
   InternalGameEvent,
   InternalGameEventTypes,
   NewRoundEventData,
+  RoundFinishedEventData,
   VotingPhaseEventData,
 } from "../events/InternalGameEvents";
 import {
@@ -25,6 +28,7 @@ import {
   GameEventErrors,
   GameEventTypes,
   NewRoundData,
+  RoundFinishedData,
   VotingPhaseData,
 } from "cah-shared/events/backend/GameEvents";
 import { Game } from "@/models/Game";
@@ -80,7 +84,7 @@ export function startListeningToGameEvents() {
           };
           socketService.emit(
             io.to(gameId),
-            LobbyEventTypes.gameStarted,
+            GameEventTypes.initGame,
             dataToSend
           );
           return;
@@ -110,6 +114,58 @@ export function startListeningToGameEvents() {
         socketService.emit(
           zarSocket.to(gameId),
           GameEventTypes.initGame,
+          dataToSend
+        );
+
+        break;
+      }
+      case InternalGameEventTypes.newRound: {
+        let gameData = internalGameEvent.data as NewRoundEventData;
+
+        let zarSocketId = activeConnectionsByPlayer.get(gameData.zar)?.socketId;
+        let zarSocket = io.sockets.sockets.get(zarSocketId);
+
+        if (!zarSocket) {
+          let dataToSend: SocketResponse<any> = {
+            success: false,
+            error: {
+              code: GameEventErrors.cantReachZar,
+              message:
+                "Can't establish a connection to zar. Please restart the game",
+            },
+          };
+          socketService.emit(
+            io.to(gameId),
+            GameEventTypes.newRound,
+            dataToSend
+          );
+          return;
+        }
+
+        // Send data to the zar. He doesn't recive the cards.
+        let dataToSend: SocketResponse<NewRoundData> = {
+          success: true,
+          data: {
+            round: gameData.round,
+            zar: gameData.zar,
+          },
+        };
+
+        socketService.emit(zarSocket, GameEventTypes.newRound, dataToSend);
+
+        dataToSend = {
+          success: true,
+          data: {
+            round: gameData.round,
+            blackCard: gameData.blackCard,
+            whiteCards: gameData.whiteCards,
+            zar: gameData.zar,
+          },
+        };
+
+        socketService.emit(
+          zarSocket.to(gameId),
+          GameEventTypes.newRound,
           dataToSend
         );
 
@@ -151,7 +207,7 @@ export function startListeningToGameEvents() {
           };
           socketService.emit(
             io.to(gameId),
-            LobbyEventTypes.gameStarted,
+            GameEventTypes.startVotingPhase,
             dataToSend
           );
           return;
@@ -184,6 +240,46 @@ export function startListeningToGameEvents() {
           dataToSend
         );
 
+        break;
+      }
+
+      case InternalGameEventTypes.roundFinished: {
+        let gameData = internalGameEvent.data as RoundFinishedEventData;
+
+        let dataToSend: SocketResponse<RoundFinishedData> = {
+          success: true,
+          data: {
+            playerMap: gameData.playerMap,
+            roundWinner: gameData.roundWinner,
+            blackCard: gameData.blackCard,
+            whiteCard: gameData.whiteCard,
+          },
+        };
+
+        socketService.emit(
+          io.to(gameId),
+          GameEventTypes.roundFinished,
+          dataToSend
+        );
+        break;
+      }
+
+      case InternalGameEventTypes.gameFinished: {
+        let gameData = internalGameEvent.data as GameFinishedEventData;
+
+        let dataToSend: SocketResponse<GameFinishedData> = {
+          success: true,
+          data: {
+            playerMap: gameData.playerMap,
+            winners: gameData.winners,
+          },
+        };
+
+        socketService.emit(
+          io.to(gameId),
+          LobbyEventTypes.gameFinished,
+          dataToSend
+        );
         break;
       }
     }
@@ -301,6 +397,8 @@ export function startListeningToNetworkEvents() {
       (data: any) => {
         let gameId: string;
         try {
+          if (!isPlayerActingOnHimself(socket.id, data.playerId))
+            throw new Error(PlayerEventErrors.forbiddenAction);
           // Create the game
           gameId = gameManager.createGame(data.playerId);
         } catch (e) {
@@ -333,6 +431,8 @@ export function startListeningToNetworkEvents() {
 
     socketService.subscribe(socket, PlayerEventTypes.StartGame, (data: any) => {
       try {
+        if (!isPlayerActingOnHimself(socket.id, data.playerId))
+          throw new Error(PlayerEventErrors.forbiddenAction);
         // Start the game
         gameManager.startGame(data.gameId, data.playerId);
       } catch (e) {
@@ -366,12 +466,14 @@ export function startListeningToNetworkEvents() {
         let remainingPlayers: number;
 
         try {
+          if (!isPlayerActingOnHimself(socket.id, data.playerId))
+            throw new Error(PlayerEventErrors.forbiddenAction);
+
           remainingPlayers = gameManager.submitCard(
             data.gameId,
             data.playerId,
             data.card
           );
-
         } catch (e) {
           console.log(e);
           let dataToSend: SocketResponse<any> = {
@@ -392,11 +494,30 @@ export function startListeningToNetworkEvents() {
           },
         };
 
-        socketService.emit(
-          socket,
-          GameEventTypes.cardSubmitted,
-          dataToSend
-        );
+        socketService.emit(socket, GameEventTypes.cardSubmitted, dataToSend);
+      }
+    );
+
+    socketService.subscribe(
+      socket,
+      PlayerEventTypes.SubmitVote,
+      (data: any) => {
+        try {
+          if (!isPlayerActingOnHimself(socket.id, data.playerId))
+            throw new Error(PlayerEventErrors.forbiddenAction);
+
+          gameManager.submitVote(data.gameId, data.playerId, data.card);
+        } catch (e) {
+          let dataToSend: SocketResponse<any> = {
+            requestId: data.requestId,
+            success: false,
+            error: {
+              code: e.message,
+              message: e.message,
+            },
+          };
+          socketService.emit(socket, errorOccured, dataToSend);
+        }
       }
     );
 

@@ -3,6 +3,8 @@ export enum InternalGameEventTypes {
   newRound = "new-round",
   gameDeleted = "game-deleted",
   startVotingPhase = "start-voting-phase",
+  gameFinished = "game-finished",
+  roundFinished = "round-finished",
 }
 
 // Interface for events from the GameManager
@@ -25,4 +27,16 @@ export interface VotingPhaseEventData extends InternalGameEventData {
     blackCard: string;
     chosenWhiteCards: Map<string, string>;
     zar: string;
+}
+
+export interface GameFinishedEventData extends InternalGameEventData {
+  winners: string[];
+  playerMap: Map<string, number>;
+}
+
+export interface RoundFinishedEventData extends InternalGameEventData {
+  playerMap: Map<string, number>;
+  roundWinner: string;
+  blackCard: string;
+  whiteCard: string;
 }

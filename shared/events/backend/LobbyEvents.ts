@@ -6,6 +6,7 @@ export enum LobbyEventTypes{
     gameCreated = 'game-created',
     gameStarted = 'game-started',
     gameDeleted = 'game-deleted',
+    gameFinished = 'game-finished',
 }
 
 export interface PlayerJoinedData{
@@ -32,4 +33,11 @@ export interface GameCreatedData{
 
 export interface GameStartedData{
     gameId: string,
+}
+
+
+
+export interface GameFinishedData{
+    winners: string[],
+    playerMap: Map<string, number>,
 }
