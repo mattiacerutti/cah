@@ -8,7 +8,7 @@ import {
   InternalGameEventData,
   InternalGameEventTypes,
   RoundFinishedEventData,
-} from "../events/InternalGameEvents";
+} from "@/events/InternalGameEvents";
 
 const MIN_PLAYERS = 2;
 

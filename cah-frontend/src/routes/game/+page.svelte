@@ -1,9 +1,7 @@
 <script lang="ts">
 	import {
 		type PlayerJoinedData,
-		type GameCreatedData,
 		LobbyEventTypes,
-		type PlayerLeftData
 	} from 'cah-shared/events/backend/LobbyEvents';
 	import { onMount } from 'svelte';
 	import { socketService } from '@/services/socketService';

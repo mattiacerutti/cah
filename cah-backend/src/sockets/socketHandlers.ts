@@ -1,9 +1,6 @@
-import { Server, Socket } from "socket.io";
 import {
   PlayerEventTypes,
   PlayerEventErrors,
-  JoinGameData,
-  SubmitCardData,
 } from "cah-shared/events/frontend/PlayerEvents";
 import {
   LobbyEventTypes,
@@ -22,7 +19,7 @@ import {
   NewRoundEventData,
   RoundFinishedEventData,
   VotingPhaseEventData,
-} from "../events/InternalGameEvents";
+} from "@/events/InternalGameEvents"
 import {
   CardSumbittedData,
   GameEventErrors,

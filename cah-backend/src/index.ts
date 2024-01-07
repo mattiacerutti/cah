@@ -2,8 +2,8 @@
 
 import http from 'http';
 import { Server } from 'socket.io';
-import { GameManager } from "./managers/GameManager";
-import { socketService } from './sockets/SocketService';
+import { GameManager } from "@/managers/GameManager";
+import { socketService } from '@/sockets/SocketService';
 
 const httpServer = http.createServer();
 const io = new Server(httpServer, {

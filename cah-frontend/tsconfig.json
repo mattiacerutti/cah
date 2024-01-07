@@ -13,6 +13,10 @@
         "strict": false,
         "moduleResolution": "node",
         "verbatimModuleSyntax": false,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        // this ensures that types are explicitly
+        // imported with `import type`, which is
+        // necessary as svelte-preprocess cannot
+        // otherwise compile components correctly
     }
 }
