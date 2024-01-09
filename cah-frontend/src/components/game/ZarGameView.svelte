@@ -52,13 +52,13 @@
 </script>
 
 {#if !isVotingPhase}
-	<div class="w-screen h-screen flex justify-center items-center flex-col">
+	<div class=" h-screen flex justify-center items-center flex-col">
 		<h1 class="text-4xl font-bold my-0.5">
 			Sei lo ZAR! Attendi che tutti i giocatori abbiano finito di votare.
 		</h1>
 	</div>
 {:else}
-	<div class="w-screen h-screen flex justify-center items-center flex-col mx-12">
+	<div class=" h-screen flex justify-center items-center flex-col mx-12">
 		<h1 class="text-2xl font-bold my-0.5">
 			{@html replacedBlackCard}
 		</h1>
@@ -91,7 +91,7 @@
 					role="button"
 					tabindex="0"
 					aria-label="Select this card"
-					class="bg-primary-violet bg-opacity-100 p-2 m-0 rounded-md hover:scale-110 hover:mx-5 hover:cursor-pointer transition-all mt-8 text-black card"
+					class="bg-primary-violet-500 bg-opacity-100 p-2 m-0 rounded-md hover:scale-110 hover:mx-5 hover:cursor-pointer transition-all mt-8 text-black card"
 				>
 				{card}
 				</div>

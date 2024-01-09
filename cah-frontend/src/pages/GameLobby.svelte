@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { playerStore } from "@/stores/playerStore";
-    import { currentGameStore, updateCurrentGame } from "@/stores/currentGameStore";
+    import { currentGameStore, isHost, updateCurrentGame } from "@/stores/currentGameStore";
 	import { get } from "svelte/store";
 	import { socketService } from "@/services/socketService";
     import { type StartGameData,  PlayerEventTypes, PlayerEventErrors} from "cah-shared/events/frontend/PlayerEvents";
@@ -36,7 +36,7 @@
 </script>
 
 
-<div class="w-screen h-screen flex justify-center items-center flex-col">
+<div class=" h-screen flex justify-center items-center flex-col">
     <h1 class="text-4xl font-bold my-0.5">
         Game Code:
     </h1>
@@ -55,7 +55,7 @@
         </div>
     {/each}
     
-    {#if $currentGameStore.host === get(playerStore).playerId}
+    {#if isHost()}
         <button class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8" on:click={startGame}>
             Start Game
         </button>

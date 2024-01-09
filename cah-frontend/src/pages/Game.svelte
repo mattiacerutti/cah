@@ -8,7 +8,7 @@
 		type RoundFinishedData
 	} from 'cah-shared/events/backend/GameEvents';
 	import GameLobby from './GameLobby.svelte';
-	import { GameState, currentGameStore } from '@/stores/currentGameStore';
+	import { GameState, currentGameStore, isHost } from '@/stores/currentGameStore';
 	import { playerStore } from '@/stores/playerStore';
 	import {
 		type GameFinishedData,
@@ -19,6 +19,8 @@
 	import PlayerGameView from '@/components/game/PlayerGameView.svelte';
 	import RoundResults from '@/components/game/RoundResults.svelte';
 	import GameResults from '@/components/game/GameResults.svelte';
+	import Modal from '@/components/Modal.svelte';
+	import { createModal } from '@/stores/modalStores';
 
 	let blackCard: string = '';
 	let whiteCards: string[];
@@ -31,7 +33,7 @@
 	$: isVotingPhase = $currentGameStore.gameState == GameState.VOTING_PHASE;
 
 	// Display phase
-	let displayTimeRemaining = 5;
+	let displayTimeRemaining = 7;
 	let finishedDisplayingResults: Promise<void>;
 
 	// Game results phase
@@ -178,6 +180,8 @@
 			}, 1000);
 		}
 	);
+
+	let deleteGameModal = createModal();
 </script>
 
 {#if $currentGameStore.gameState != GameState.LOBBY}
@@ -199,6 +203,20 @@
 	{/if}
 	{#if $currentGameStore.gameState == GameState.FINISHED}
 		<GameResults bind:remainingTime={gameResultsTimeRemaining} {finishedGameData} />
+	{/if}
+
+    {#if isHost()}
+		<button
+			class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8 absolute bottom-10 left-[50%]"
+			on:click={() => deleteGameModal.show()}
+		>
+			End the game
+		</button>
+		<Modal
+			modal={deleteGameModal}
+			title={'Delete'}
+			message={'Are you sure you want to delete this game? This action cannot be undone.'}
+		/>
 	{/if}
 {:else}
 	<GameLobby />

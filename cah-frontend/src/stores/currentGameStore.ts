@@ -1,4 +1,5 @@
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
+import { playerStore } from './playerStore';
 
 export const enum GameState{
     LOBBY,
@@ -23,17 +24,6 @@ export function updateCurrentGame() {
     });
 }
 
-export function updatePlayers(playerId: string, score: number) {
-    currentGameStore.update(currentGame => {
-        // Check if currentGame.players is a Map and create a new one if it is
-        const updatedPlayers = currentGame.players instanceof Map
-            ? new Map(currentGame.players)
-            : new Map();
-
-        // Update the map with the new player score
-        updatedPlayers.set(playerId, score);
-
-        // Return a new object for the store
-        return { ...currentGame, players: updatedPlayers };
-    });
+export function isHost() {
+    return get(currentGameStore).host === get(playerStore).playerId;
 }

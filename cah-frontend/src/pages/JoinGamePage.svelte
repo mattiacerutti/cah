@@ -49,7 +49,7 @@
     });
 </script>
 
-<div class="w-screen h-screen flex justify-center items-center flex-col gap-8">
+<div class=" h-screen flex justify-center items-center flex-col gap-8">
 	<div class="w-max h-auto flex-row flex gap-10">
 		<TextField bind:value={gameCode} placeHolder={'Type game code'} />
 		<button
