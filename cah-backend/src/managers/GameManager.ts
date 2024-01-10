@@ -59,11 +59,16 @@ export class GameManager extends EventEmitter {
     // Retrieve the game
     let game = this.currentGames.get(id);
 
+    let data: GameFinishedEventData = {
+      winners: game.getWinners(),
+      playerMap: game.getPlayers(),
+    };
+
     // Notify the game that it is being deleted
     this.emit("game-event", {
       gameId: id,
       eventType: InternalGameEventTypes.gameDeleted,
-      data: {},
+      data: data,
     });
 
     // Retrieve the listener and unsubscribe

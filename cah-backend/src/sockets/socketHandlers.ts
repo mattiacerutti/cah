@@ -19,7 +19,7 @@ import {
   NewRoundEventData,
   RoundFinishedEventData,
   VotingPhaseEventData,
-} from "@/events/InternalGameEvents"
+} from "@/events/InternalGameEvents";
 import {
   CardSumbittedData,
   GameEventErrors,
@@ -169,10 +169,14 @@ export function startListeningToGameEvents() {
         break;
       }
       case InternalGameEventTypes.gameDeleted: {
+        let gameData = internalGameEvent.data as GameDeletedData;
+
         let dataToSend: SocketResponse<GameDeletedData> = {
           success: true,
           data: {
             gameId: gameId,
+            winners: gameData.winners,
+            playerMap: gameData.playerMap,
           },
         };
 
@@ -338,6 +342,36 @@ export function startListeningToNetworkEvents() {
         dataToSend
       );
     });
+
+    socketService.subscribe(
+      socket,
+      PlayerEventTypes.DeleteGame,
+      (data: any) => {
+        let game: Game;
+
+        try {
+          if (!isPlayerActingOnHimself(socket.id, data.playerId))
+            throw new Error(PlayerEventErrors.forbiddenAction);
+
+          // Retrive the game
+          game = gameManager.getGame(data.gameId);
+
+          // Remove the player from the game
+          gameManager.deleteGame(data.gameId);
+        } catch (e) {
+          let dataToSend: SocketResponse<any> = {
+            requestId: data.requestId,
+            success: false,
+            error: {
+              code: e.message,
+              message: e.message,
+            },
+          };
+          socketService.emit(socket, errorOccured, dataToSend);
+          return;
+        }
+      }
+    );
 
     socketService.subscribe(socket, PlayerEventTypes.LeaveGame, (data: any) => {
       let game: Game;

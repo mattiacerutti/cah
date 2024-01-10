@@ -12,6 +12,7 @@
 	import JoinGame from '@/pages/JoinGamePage.svelte';
 	import { type SocketResponse } from 'cah-shared/enums/SocketResponse';
 	import Game from '@/pages/Game.svelte';
+	import { AlertType, showAlert } from '@/stores/componentsStore';
 
 	const playerId: string = get(playerStore).playerId; // Get current value of the player store
 
@@ -30,7 +31,7 @@
 			let data = response.data;
 
 			if (data.playerId === playerId) {
-				alert('You joined the game!');
+				showAlert('You joined the game!', AlertType.success, 1000);
 
 				$currentGameStore.gameId = data.gameId;
 				$currentGameStore.host = data.host;
@@ -45,23 +46,9 @@
 		}
 	);
 
-	socketService.subscribe(LobbyEventTypes.gameDeleted, (response: SocketResponse<any>) => {
-		
-		alert("This game was deleted.");
-
-		$currentGameStore.gameId = null;
-		$currentGameStore.host = null;
-		$currentGameStore.players = new Map<string, number>();
-		$currentGameStore.isZar = false;
-		$currentGameStore.gameRound = 0;
-
-		$currentGameStore.gameState = null;
-
-	});
-
 </script>
 
-{#if $currentGameStore.gameId === null}
+{#if $currentGameStore.gameState === null}
 	<JoinGame />
 {:else}
 	<Game />

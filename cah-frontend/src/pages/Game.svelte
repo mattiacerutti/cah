@@ -13,14 +13,16 @@
 	import {
 		type GameFinishedData,
 		LobbyEventTypes,
-		type PlayerLeftData
+		type PlayerLeftData,
+		type GameDeletedData
 	} from 'cah-shared/events/backend/LobbyEvents';
 	import ZarGameView from '@/components/game/ZarGameView.svelte';
 	import PlayerGameView from '@/components/game/PlayerGameView.svelte';
 	import RoundResults from '@/components/game/RoundResults.svelte';
 	import GameResults from '@/components/game/GameResults.svelte';
 	import Modal from '@/components/Modal.svelte';
-	import { createModal } from '@/stores/modalStores';
+	import { AlertType, createModal, showAlert } from '@/stores/componentsStore';
+	import { type DeleteGameData, PlayerEventTypes } from 'cah-shared/events/frontend/PlayerEvents';
 
 	let blackCard: string = '';
 	let whiteCards: string[];
@@ -38,6 +40,15 @@
 
 	// Game results phase
 	let gameResultsTimeRemaining = 10;
+
+	const deleteGame = () => {
+		let data: DeleteGameData = {
+			gameId: $currentGameStore.gameId
+		};
+		socketService.emit(PlayerEventTypes.DeleteGame, data, (error) => {
+			alert(error.message);
+		});
+	};
 
 	socketService.subscribe(GameEventTypes.initGame, (response: SocketResponse<NewRoundData>) => {
 		if (!response.success) {
@@ -73,6 +84,10 @@
 
 			// Waits for the eventual results to be displayed
 			await finishedDisplayingResults;
+
+			if($currentGameStore.gameState == GameState.FINISHED) {
+				return;
+			}
 
 			let data = response.data;
 
@@ -181,6 +196,36 @@
 		}
 	);
 
+	socketService.subscribe(
+		LobbyEventTypes.gameDeleted,
+		(response: SocketResponse<GameDeletedData>) => {
+			$currentGameStore.gameId = null;
+			$currentGameStore.host = null;
+			$currentGameStore.players = new Map<string, number>();
+			$currentGameStore.isZar = false;
+			$currentGameStore.gameRound = 0;
+
+			// alert('The game was deleted');
+			showAlert("The game was deleted", AlertType.warning)
+
+			if ($currentGameStore.gameState != GameState.LOBBY && $currentGameStore.gameState != null) {
+				$currentGameStore.gameState = GameState.FINISHED;
+				finishedGameData = response.data;
+				let intervalId = setInterval(() => {
+					gameResultsTimeRemaining -= 1;
+
+					if (gameResultsTimeRemaining <= 0) {
+						$currentGameStore.gameState = null;
+						clearInterval(intervalId); // Clear the interval
+					}
+				}, 1000);
+				return;
+			}
+
+			$currentGameStore.gameState = null;
+		}
+	);
+
 	let deleteGameModal = createModal();
 </script>
 
@@ -205,19 +250,21 @@
 		<GameResults bind:remainingTime={gameResultsTimeRemaining} {finishedGameData} />
 	{/if}
 
-    {#if isHost()}
+	{#if isHost()}
 		<button
 			class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8 absolute bottom-10 left-[50%]"
 			on:click={() => deleteGameModal.show()}
 		>
 			End the game
 		</button>
-		<Modal
-			modal={deleteGameModal}
-			title={'Delete'}
-			message={'Are you sure you want to delete this game? This action cannot be undone.'}
-		/>
 	{/if}
 {:else}
-	<GameLobby />
+	<GameLobby {deleteGameModal} />
 {/if}
+
+<Modal
+	modal={deleteGameModal}
+	title={'Delete'}
+	message={'Are you sure you want to delete this game? This action cannot be undone.'}
+	buttonAction={deleteGame}
+/>

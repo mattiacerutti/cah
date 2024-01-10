@@ -1,6 +1,7 @@
 <script lang="ts">
 	import TextField from '@/components/TextField.svelte';
 	import { socketService } from '@/services/socketService';
+	import { AlertType, showAlert } from '@/stores/componentsStore';
 	import { GameState, currentGameStore } from '@/stores/currentGameStore';
 	import { playerStore } from '@/stores/playerStore';
 	import { type SocketResponse } from 'cah-shared/enums/SocketResponse';
@@ -33,7 +34,7 @@
 			// Copy the code to the clipboard
 			navigator.clipboard.writeText(data.gameId);
 
-			alert(`Game created!`);
+			showAlert("Game created successfully!", AlertType.success, 1000)
 
 			$currentGameStore.gameId = data.gameId;
 			$currentGameStore.host = $playerStore.playerId;

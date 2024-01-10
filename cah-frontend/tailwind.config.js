@@ -4,15 +4,21 @@ export default {
 	theme: {
 		extend: {
 			colors: {
-				'primary-black': '#1C1F24',
-				'primary-white': '#EFEFEF',
+				'primary-black': {
+          500: '#353B45',
+          600 : '#1C1F24' ,
+        },
+        				'primary-white': '#EFEFEF',
 				'primary-orange': '#EE6C4D',
 				'primary-blue': '#35A7FF',
 				'primary-violet': { 
           500 : '#9381FF' ,
           600 : '#826dff' ,
         },
-				'secondary-black': '#353B45'
+				'primary-red': {
+          500: "#f13b51",
+          600: "#ef233c",
+        },
 			}
 		}
 	},

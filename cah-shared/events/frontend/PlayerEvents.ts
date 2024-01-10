@@ -1,6 +1,7 @@
 // All the events that the player emits to the server
 export enum PlayerEventTypes{
     CreateGame = 'create-game',
+    DeleteGame = 'delete-game',
     JoinGame = 'join-game',
     LeaveGame = 'leave-game',
     StartGame = 'start-game',
@@ -41,6 +42,10 @@ export interface LeaveGameData{
 }
 
 export interface StartGameData{
+    gameId: string,
+}
+
+export interface DeleteGameData{
     gameId: string,
 }
 

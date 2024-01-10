@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { socketService } from '@/services/socketService';
+	import { showAlert } from '@/stores/componentsStore';
 	import { currentGameStore } from '@/stores/currentGameStore';
 	import { type SocketResponse } from 'cah-shared/enums/SocketResponse';
 	import { type CardSumbittedData, GameEventTypes } from 'cah-shared/events/backend/GameEvents';
@@ -21,7 +22,7 @@
 
 	const submitCard = () => {
 		if (selectedCard === '') {
-			alert('Seleziona una carta!');
+			showAlert('You must select a card!');
 			return;
 		}
 
