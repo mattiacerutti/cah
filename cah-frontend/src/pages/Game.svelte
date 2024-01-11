@@ -252,7 +252,7 @@
 
 	{#if isHost()}
 		<button
-			class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8 absolute bottom-10 left-[50%]"
+			class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8 absolute bottom-10 left-[50%] transform translate-x-[-50%]"
 			on:click={() => deleteGameModal.show()}
 		>
 			End the game

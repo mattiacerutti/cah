@@ -7,7 +7,7 @@ import {
   VotingPhaseEventData,
 } from "../events/InternalGameEvents";
 
-const DATA_PATH = "../../data/gameData.json";
+const DATA_PATH = "../../data/cards.json";
 const MAX_ROUNDS = 2;
 const WHITE_CARDS_PER_PLAYER = 6;
 
@@ -133,11 +133,17 @@ export class Game extends EventEmitter {
     const jsonData = JSON.parse(rawData);
 
     // Get the black cards
-    const blackCards: string[] = jsonData.blackCards;
+    const blackCards: { text: string; pick: number }[] = jsonData.black;
 
-    // Get a random black card
-    const randomBlackCard: string =
-      blackCards[Math.floor(Math.random() * blackCards.length)];
+    // Get a random black card that has only one pick
+    let randomCard: { text: string; pick: number };
+    do{
+      randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
+    } while(randomCard.pick != 1)
+
+    let randomBlackCard: string = randomCard.text;
+    randomBlackCard = randomBlackCard.replace("_", "______");
+
 
     return randomBlackCard;
   }
@@ -152,7 +158,7 @@ export class Game extends EventEmitter {
     const jsonData = JSON.parse(rawData);
 
     // Get the white cards
-    const whiteCards: string[] = jsonData.whiteCards;
+    const whiteCards: string[] = jsonData.white;
 
     let whiteCardsMap: Map<string, string[]> = new Map<string, string[]>();
 
