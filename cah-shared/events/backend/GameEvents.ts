@@ -15,6 +15,7 @@ export interface NewRoundData {
     blackCard?: string,
     whiteCards?: Map<string, string[]>,
     zar: string,
+    wasInvalidated: boolean,
 }
 
 export interface VotingPhaseData {

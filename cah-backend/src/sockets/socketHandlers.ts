@@ -93,6 +93,7 @@ export function startListeningToGameEvents() {
           data: {
             round: gameData.round,
             zar: gameData.zar,
+            wasInvalidated: false,
           },
         };
 
@@ -105,6 +106,7 @@ export function startListeningToGameEvents() {
             blackCard: gameData.blackCard,
             whiteCards: gameData.whiteCards,
             zar: gameData.zar,
+            wasInvalidated: false,
           },
         };
 
@@ -116,6 +118,7 @@ export function startListeningToGameEvents() {
 
         break;
       }
+      case InternalGameEventTypes.newRoundFromInvalidation:
       case InternalGameEventTypes.newRound: {
         let gameData = internalGameEvent.data as NewRoundEventData;
 
@@ -145,6 +148,7 @@ export function startListeningToGameEvents() {
           data: {
             round: gameData.round,
             zar: gameData.zar,
+            wasInvalidated: gameEvent === InternalGameEventTypes.newRoundFromInvalidation,
           },
         };
 
@@ -157,6 +161,7 @@ export function startListeningToGameEvents() {
             blackCard: gameData.blackCard,
             whiteCards: gameData.whiteCards,
             zar: gameData.zar,
+            wasInvalidated: gameEvent === InternalGameEventTypes.newRoundFromInvalidation,
           },
         };
 
@@ -168,6 +173,7 @@ export function startListeningToGameEvents() {
 
         break;
       }
+      
       case InternalGameEventTypes.gameDeleted: {
         let gameData = internalGameEvent.data as GameDeletedData;
 

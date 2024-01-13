@@ -5,6 +5,7 @@ export enum InternalGameEventTypes {
   startVotingPhase = "start-voting-phase",
   gameFinished = "game-finished",
   roundFinished = "round-finished",
+  newRoundFromInvalidation = "new-round-from-invalidation",
 }
 
 // Interface for events from the GameManager

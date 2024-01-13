@@ -26,7 +26,7 @@ export class Game extends EventEmitter {
   private host: string | null = null;
 
   private currentZar: string | null = null;
-  private remainingZar: string[];
+  private remainingZar: string[] = [];
   private currentRound: number = 0;
   private gameState: GameState = GameState.LOBBY;
 
@@ -61,7 +61,7 @@ export class Game extends EventEmitter {
   public initializeGameStart() {
     this.gameState = GameState.STARTING;
 
-    this.remainingZar = Array.from(this.players.keys());
+    this.currentRound++;
 
     let dataToSend: NewRoundEventData = this.inizializeNewRound();
 
@@ -88,10 +88,21 @@ export class Game extends EventEmitter {
     this.gameState = GameState.VOTING_PHASE;
   }
 
-  public startNewRound() {
+  public startNewRound(previousRoundInvalidated: boolean = false) {
+    if (!previousRoundInvalidated) {
+      this.currentRound++;
+    }
+
     let dataToSend: NewRoundEventData = this.inizializeNewRound();
 
-    this.emitEvent(dataToSend, InternalGameEventTypes.newRound);
+    if (previousRoundInvalidated) {
+      this.emitEvent(
+        dataToSend,
+        InternalGameEventTypes.newRoundFromInvalidation
+      );
+    } else {
+      this.emitEvent(dataToSend, InternalGameEventTypes.newRound);
+    }
 
     this.gameState = GameState.PLAYER_TURN;
   }
@@ -110,8 +121,6 @@ export class Game extends EventEmitter {
 
     this.currentWhiteCards = whiteCards;
     this.currentBlackCard = blackCard;
-
-    this.currentRound++;
 
     let dataToSend: NewRoundEventData = {
       round: this.currentRound,
@@ -137,13 +146,12 @@ export class Game extends EventEmitter {
 
     // Get a random black card that has only one pick
     let randomCard: { text: string; pick: number };
-    do{
+    do {
       randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
-    } while(randomCard.pick != 1)
+    } while (randomCard.pick != 1);
 
     let randomBlackCard: string = randomCard.text;
     randomBlackCard = randomBlackCard.replace("_", "______");
-
 
     return randomBlackCard;
   }
@@ -188,6 +196,12 @@ export class Game extends EventEmitter {
     return false;
   }
 
+  public invalidateRound() {
+    let isRoundInvalidated: boolean = true;
+
+    this.startNewRound(isRoundInvalidated);
+  }
+
   private emitEvent(
     data: InternalGameEventData,
     event: InternalGameEventTypes
@@ -224,7 +238,8 @@ export class Game extends EventEmitter {
       // If the first zar is same as the previous, remove it and insert it in a random position
       if (previousZar != null && this.remainingZar[0] == previousZar) {
         const firstElement = this.remainingZar.shift();
-        const randomIndex = Math.floor(Math.random() * (this.remainingZar.length - 1)) + 1;
+        const randomIndex =
+          Math.floor(Math.random() * (this.remainingZar.length - 1)) + 1;
         this.remainingZar.splice(randomIndex, 0, firstElement);
       }
     }
@@ -235,7 +250,7 @@ export class Game extends EventEmitter {
     return newZar;
   }
 
-  public resetGame(){
+  public resetGame() {
     this.currentRound = 0;
     this.gameState = GameState.LOBBY;
     this.currentZar = null;
@@ -245,7 +260,7 @@ export class Game extends EventEmitter {
     this.remainingZar = [];
 
     //Reset player points
-    for(let [key] of this.players){
+    for (let [key] of this.players) {
       this.players.set(key, 0);
     }
   }

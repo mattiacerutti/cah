@@ -111,7 +111,8 @@ export class GameManager extends EventEmitter {
     //If the game is started and it doesn't have enough players, delete it
     if (
       (this.currentGames.get(id)?.getPlayers().size <= MIN_PLAYERS &&
-      this.currentGames.get(id)?.isStarted()) || this.currentGames.get(id)?.getPlayers().size <= 1
+        this.currentGames.get(id)?.isStarted()) ||
+      this.currentGames.get(id)?.getPlayers().size <= 1
     ) {
       console.log("Game " + id + " has not enough players, deleting it");
       this.deleteGame(id);
@@ -127,6 +128,11 @@ export class GameManager extends EventEmitter {
     //If the player is the host, than switch
     if (this.currentGames.get(id)?.getHost() == playerId) {
       this.currentGames.get(id)?.switchHost();
+    }
+
+    //If the player is the ZAR, invalidate the round
+    if (this.currentGames.get(id)?.getZar() == playerId) {
+      this.currentGames.get(id)?.invalidateRound();
     }
 
     return false;

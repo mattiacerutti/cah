@@ -82,14 +82,19 @@
 				return;
 			}
 
-			// Waits for the eventual results to be displayed
-			await finishedDisplayingResults;
-
-			if($currentGameStore.gameState == GameState.FINISHED) {
+			if ($currentGameStore.gameState == GameState.FINISHED) {
 				return;
 			}
 
 			let data = response.data;
+
+			// If the previous round was invalidated, skip directly to the next.
+			if (data.wasInvalidated) {
+				showAlert('The ZAR left the game. Skipping round.', AlertType.warning);
+			} else {
+				// Waits for the eventual results to be displayed
+				await finishedDisplayingResults;
+			}
 
 			$currentGameStore.isZar = data.zar === $playerStore.playerId;
 			$currentGameStore.gameRound = data.round;
@@ -206,7 +211,7 @@
 			$currentGameStore.gameRound = 0;
 
 			// alert('The game was deleted');
-			showAlert("The game was deleted", AlertType.warning)
+			showAlert('The game was deleted', AlertType.warning);
 
 			if ($currentGameStore.gameState != GameState.LOBBY && $currentGameStore.gameState != null) {
 				$currentGameStore.gameState = GameState.FINISHED;
