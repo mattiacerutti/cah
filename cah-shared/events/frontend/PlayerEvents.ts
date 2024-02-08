@@ -31,7 +31,7 @@ export interface CreateGameData{
 
 export interface SubmitCardData{
     gameId: string,
-    card: string
+    cards: string[]
 }
 export interface JoinGameData{
     gameId: string,
@@ -51,5 +51,5 @@ export interface DeleteGameData{
 
 export interface SubmitVoteData{
     gameId: string,
-    card: string
+    cards: string[]
 }

@@ -153,7 +153,7 @@ export class GameManager extends EventEmitter {
     this.currentGames.get(id)?.initializeGameStart();
   }
 
-  public submitCard(gameId: string, playerId: string, card: string): number {
+  public submitCard(gameId: string, playerId: string, cards: string[]): number {
     // Check if game exists
     let game = this.currentGames.get(gameId);
     if (!game) throw new Error(PlayerEventErrors.gameNotFound);
@@ -177,19 +177,19 @@ export class GameManager extends EventEmitter {
     if (game.getSumbittedCards().has(playerId))
       throw new Error(PlayerEventErrors.alreadySubmittedACard);
 
-    // Check if player has the card
-    if (!game.getPlayerWhiteCards(playerId).includes(card))
-      throw new Error(PlayerEventErrors.cardNotInPlayersHand);
+    // Check if player has the cards
+    for(let card of cards){
+      if (!game.getPlayerWhiteCards(playerId).includes(card))
+        throw new Error(PlayerEventErrors.cardNotInPlayersHand);
+    }
 
-    // Submit the card
-    let remainingPlayers = game.registerSubmittedCard(playerId, card);
+    // Submit the cards
+    let remainingPlayers = game.registerSubmittedCards(playerId, cards);
 
     console.log(
       "Player " +
         playerId +
-        " submitted card " +
-        card +
-        ". Remaining players: " +
+        " submitted a card. Remaining players: " +
         remainingPlayers
     );
 
@@ -202,7 +202,7 @@ export class GameManager extends EventEmitter {
     return remainingPlayers;
   }
 
-  public submitVote(gameId: string, playerId: string, card: string) {
+  public submitVote(gameId: string, playerId: string, cards: string[]) {
     // Check if game exists
     let game = this.currentGames.get(gameId);
     if (!game) throw new Error(PlayerEventErrors.gameNotFound);
@@ -223,14 +223,14 @@ export class GameManager extends EventEmitter {
       throw new Error(PlayerEventErrors.forbiddenAction);
 
     // Check if the card belongs to any player, if so get that player id
-    let winnerPlayerId = game.getSubmittedCardOwner(card);
+    let winnerPlayerId = game.getSubmittedCardOwner(cards);
     if (!winnerPlayerId) throw new Error(PlayerEventErrors.cardNotFound);
 
     // Submit the vote
     let isGameFinished: boolean = game.endRound(winnerPlayerId);
 
     // Display the round results
-    this.displayRoundResults(gameId, winnerPlayerId, card);
+    this.displayRoundResults(gameId, winnerPlayerId, cards);
 
     if (isGameFinished) {
       this.endGame(gameId);
@@ -270,7 +270,7 @@ export class GameManager extends EventEmitter {
   private displayRoundResults(
     gameId: string,
     winner: string,
-    whiteCard: string
+    whiteCards: string[]
   ) {
     // Retrieve the game
     let game = this.currentGames.get(gameId);
@@ -278,11 +278,14 @@ export class GameManager extends EventEmitter {
     // Get the player map
     let playerMap = game.getPlayers();
 
+    let currentBlackCard = game.getCurrentBlackCard();
+
     let data: RoundFinishedEventData = {
       playerMap: playerMap,
       roundWinner: winner,
-      blackCard: game.getCurrentBlackCard(),
-      whiteCard: whiteCard,
+      blackCard: currentBlackCard.text,
+      blackCardPickNumber: currentBlackCard.pick,
+      whiteCards: whiteCards,
     };
 
     // Notify that the round is finished

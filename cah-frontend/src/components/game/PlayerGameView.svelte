@@ -11,18 +11,31 @@
 	export let blackCard: string = '';
 	export let whiteCards: string[] = [];
 
-	let selectedCard: string = '';
+	export let blackCardPickNumber: number;
+
+	let selectedCards: string[] = [];
+	for (let i = 0; i < blackCardPickNumber; i++) {
+		selectedCards.push('');
+	}
 
 	let isCardSubmitted: boolean = false;
 	let playerRemaining: number;
 
-	$: replacedBlackCard = blackCard.includes('___')
-		? blackCard.replace(/_{2,}/g, `<span class="text-primary-orange">${selectedCard}</span>`)
-		: `${blackCard} <span class="text-primary-orange">${selectedCard}</span>`;
+	let blackCardParts = blackCard.split('______');
+
+	const countSubmittedCards = () => {
+		let count = 0;
+		selectedCards.forEach((card) => {
+			if (card !== '') {
+				count++;
+			}
+		});
+		return count;
+	};
 
 	const submitCard = () => {
-		if (selectedCard === '') {
-			showAlert('You must select a card!');
+		if (countSubmittedCards() < blackCardPickNumber) {
+			showAlert('You must complete the phrase!');
 			return;
 		}
 
@@ -30,7 +43,7 @@
 			PlayerEventTypes.SubmitCard,
 			{
 				gameId: $currentGameStore.gameId,
-				card: selectedCard
+				cards: selectedCards
 			},
 			(error) => {
 				if (error) {
@@ -62,11 +75,26 @@
 {#if !isVotingPhase}
 	<div class=" h-screen flex justify-center items-center flex-col mx-12">
 		<h1 class="text-2xl font-bold my-0.5">
-			{#if selectedCard === ''}
-				{blackCard}
-			{:else}
-				{@html replacedBlackCard}
-			{/if}
+			<!-- {@html replacedBlackCard} -->
+			{#each blackCardParts as part, index}
+				{@html part}
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				{#if index < selectedCards.length}
+					{#if selectedCards[index] !== ''}
+						<span
+							class="text-primary-orange cursor-pointer"
+							on:click={() => {
+								selectedCards[index] = '';
+							}}
+						>
+							{selectedCards[index]}</span
+						>
+					{:else}
+						______
+					{/if}
+				{/if}
+			{/each}
 		</h1>
 		{#if isCardSubmitted}
 			<h1 class="text-xl font-bold my-0.5 text-primary-violet-500 text-center mt-8">
@@ -75,62 +103,32 @@
 		{:else}
 			<div class="flex flex-wrap justify-center mx-80" id="test">
 				{#each whiteCards as card}
-					{#if card != selectedCard}
+					{#if !selectedCards.includes(card)}
 						<div
 							role="button"
 							tabindex="0"
-							on:click={() => (selectedCard = card)}
-							on:keydown={() => (selectedCard = card)}
+							on:click={() => {
+								//Put in first available void string in selectedCards
+								let index = selectedCards.indexOf('');
+								if (index !== -1) {
+									selectedCards[index] = card;
+									return;
+								}
+								//Replace last one
+								selectedCards[selectedCards.length - 1] = card;
+							}}
+							on:keydown={() => {
+								//Put in first available void string in selectedCards
+								let index = selectedCards.indexOf('');
+								if (index !== -1) {
+									selectedCards[index] = card;
+									return;
+								}
+								//Replace last one
+								selectedCards[selectedCards.length - 1] = card;
+							}}
 							aria-label="Select this card"
-							class="bg-primary-violet-500 bg-opacity-100 p-2 m-2 rounded-md transition-all hover:bg-primary-violet-600  hover:cursor-pointer mt-8 text-black card"
-							on:mouseenter={(e) => {
-								//Get the element width and devide it by 10%
-
-								// let width = e.currentTarget.clientWidth;
-
-								// let sus = width / 11; // For 10% scale increase
-
-								// const style = getComputedStyle(e.currentTarget);
-
-								// let margin = 0;
-								// if (parseFloat(style.transitionDuration) > 0 && next[1] == e.currentTarget) {
-								// 	margin = next[0];
-								// } else {
-								// 	margin = parseInt(style.marginRight);
-								// }
-
-								// console.log(`Increasing gap ${margin} by: `, Math.ceil(sus / 2));
-
-								// e.currentTarget.style.marginRight = margin + Math.ceil(sus / 2) + 'px';
-								// e.currentTarget.style.marginLeft = margin + Math.ceil(sus / 2) + 'px';
-
-								// next[0] = margin + Math.ceil(sus / 2);
-								// next[1] = e.currentTarget;
-							}}
-							on:mouseleave={(e) => {
-								//Get the element width and devide it by 10%
-
-								// let width = e.currentTarget.clientWidth;
-
-								// let sus = width / 11; // For 10% scale increase
-
-								// const style = getComputedStyle(e.currentTarget);
-
-								// let margin = 0;
-								// if (parseFloat(style.transitionDuration) > 0 && next[1] == e.currentTarget) {
-								// 	margin = next[0];
-								// } else {
-								// 	margin = parseInt(style.marginRight);
-								// }
-
-								// console.log(`Decreasing gap ${margin} by: `, Math.ceil(sus / 2));
-
-								// e.currentTarget.style.marginRight = margin - Math.ceil(sus / 2) + 'px';
-								// e.currentTarget.style.marginLeft = margin - Math.ceil(sus / 2) + 'px';
-
-								// next[0] = margin - Math.ceil(sus / 2);
-								// next[1] = e.currentTarget;
-							}}
+							class="bg-primary-violet-500 bg-opacity-100 p-2 m-2 rounded-md transition-all hover:bg-primary-violet-600 hover:cursor-pointer mt-8 text-black card"
 						>
 							{card}
 						</div>
@@ -154,7 +152,6 @@
 {/if}
 
 <style>
-
 	.submit-button {
 		scale: 2;
 	}

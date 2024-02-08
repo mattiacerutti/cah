@@ -20,13 +20,15 @@ export interface InternalGameEventData {}
 export interface NewRoundEventData extends InternalGameEventData {
   round: number;
   blackCard: string;
+  blackCardPickNumber: number;
   whiteCards: Map<string, string[]>;
   zar: string;
 }
 
 export interface VotingPhaseEventData extends InternalGameEventData {
     blackCard: string;
-    chosenWhiteCards: Map<string, string>;
+    blackCardPickNumber: number;
+    chosenWhiteCards: Map<string, string[]>;
     zar: string;
 }
 
@@ -39,5 +41,6 @@ export interface RoundFinishedEventData extends InternalGameEventData {
   playerMap: Map<string, number>;
   roundWinner: string;
   blackCard: string;
-  whiteCard: string;
+  blackCardPickNumber: number;
+  whiteCards: string[];
 }

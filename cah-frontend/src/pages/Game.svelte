@@ -25,7 +25,10 @@
 	import { type DeleteGameData, PlayerEventTypes } from 'cah-shared/events/frontend/PlayerEvents';
 
 	let blackCard: string = '';
+	let blackCardPickNumber: number;
 	let whiteCards: string[];
+
+	let chosenWhiteCards: string[][];
 
 	let finishedRoundData: RoundFinishedData;
 	let finishedGameData: GameFinishedData;
@@ -63,6 +66,7 @@
 
 		if (data.blackCard && data.whiteCards) {
 			blackCard = data.blackCard;
+			blackCardPickNumber = data.blackCardPickNumber;
 			whiteCards = data.whiteCards.get($playerStore.playerId);
 		}
 
@@ -101,6 +105,7 @@
 
 			if (data.blackCard && data.whiteCards) {
 				blackCard = data.blackCard;
+				blackCardPickNumber = data.blackCardPickNumber;
 				whiteCards = data.whiteCards.get($playerStore.playerId);
 			}
 
@@ -143,7 +148,8 @@
 
 			if ($currentGameStore.isZar) {
 				blackCard = data.blackCard;
-				whiteCards = data.chosenWhiteCards;
+				blackCardPickNumber = data.blackCardPickNumber;
+				chosenWhiteCards = data.chosenWhiteCards;
 			}
 		}
 	);
@@ -237,16 +243,16 @@
 {#if $currentGameStore.gameState != GameState.LOBBY}
 	{#if $currentGameStore.gameState == GameState.PLAYING || $currentGameStore.gameState == GameState.VOTING_PHASE}
 		{#if !$currentGameStore.isZar}
-			<PlayerGameView bind:isVotingPhase bind:whiteCards bind:blackCard />
+			<PlayerGameView bind:isVotingPhase bind:whiteCards bind:blackCard {blackCardPickNumber} />
 		{:else}
-			<ZarGameView bind:isVotingPhase bind:whiteCards bind:blackCard />
+			<ZarGameView bind:isVotingPhase bind:blackCard whiteCards={chosenWhiteCards} />
 		{/if}
 	{/if}
 	{#if $currentGameStore.gameState == GameState.DISPLAYING_RESULTS}
 		<RoundResults
 			winnerId={finishedRoundData.roundWinner}
 			blackCard={finishedRoundData.blackCard}
-			winnerWhiteCard={finishedRoundData.whiteCard}
+			winnerWhiteCards={finishedRoundData.whiteCards}
 			playerMap={finishedRoundData.playerMap}
 			bind:timeRemaining={displayTimeRemaining}
 		/>

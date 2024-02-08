@@ -13,6 +13,7 @@ export enum GameEventErrors {
 export interface NewRoundData {
     round: number,
     blackCard?: string,
+    blackCardPickNumber?: number,
     whiteCards?: Map<string, string[]>,
     zar: string,
     wasInvalidated: boolean,
@@ -20,7 +21,8 @@ export interface NewRoundData {
 
 export interface VotingPhaseData {
     blackCard?: string;
-    chosenWhiteCards?: string[];
+    blackCardPickNumber?: number;
+    chosenWhiteCards?: string[][];
 }
 
 export interface CardSumbittedData{
@@ -30,6 +32,7 @@ export interface CardSumbittedData{
 export interface RoundFinishedData{
     roundWinner: string,
     blackCard: string,
-    whiteCard: string,
+    blackCardPickNumber: number,
+    whiteCards: string[],
     playerMap: Map<string, number>,
 }

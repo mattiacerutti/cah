@@ -1,13 +1,13 @@
 <script lang="ts">
 	export let playerMap: Map<string, number>;
 	export let blackCard: string;
-	export let winnerWhiteCard: string;
+	export let winnerWhiteCards: string[];
 	export let winnerId: string;
 	export let timeRemaining: number;
 
 	$: replacedBlackCard = blackCard.includes('___')
-		? blackCard.replace(/_{2,}/g, `<span class="text-primary-orange">${winnerWhiteCard}</span>`)
-		: `${blackCard} <span class="text-primary-orange">${winnerWhiteCard}</span>`;
+		? blackCard.replace(/_{2,}/g, `<span class="text-primary-orange">${winnerWhiteCards[0]}</span>`)
+		: `${blackCard} <span class="text-primary-orange">${winnerWhiteCards[0]}</span>`;
 </script>
 
 <div class=" h-screen flex justify-center items-center flex-col mx-12">

@@ -5,11 +5,16 @@ import {
   InternalGameEventTypes,
   NewRoundEventData,
   VotingPhaseEventData,
-} from "../events/InternalGameEvents";
+} from "@/events/InternalGameEvents";
 
-const DATA_PATH = "../../data/cards.json";
+const DATA_PATH = "@/data/cards.json";
 const MAX_ROUNDS = 2;
 const WHITE_CARDS_PER_PLAYER = 6;
+
+interface blackCard {
+  text: string;
+  pick: number;
+}
 
 export enum GameState {
   LOBBY,
@@ -30,9 +35,9 @@ export class Game extends EventEmitter {
   private currentRound: number = 0;
   private gameState: GameState = GameState.LOBBY;
 
-  private submittedCards: Map<string, string> | null = null;
+  private submittedCards: Map<string, string[]> | null = null;
   private currentWhiteCards: Map<string, string[]> | null = null;
-  private currentBlackCard: string | null = null;
+  private currentBlackCard: blackCard | null = null;
 
   constructor(host: string) {
     super();
@@ -70,15 +75,16 @@ export class Game extends EventEmitter {
     this.gameState = GameState.PLAYER_TURN;
   }
 
-  public registerSubmittedCard(playerId: string, card: string): number {
-    this.submittedCards.set(playerId, card);
+  public registerSubmittedCards(playerId: string, cards: string[]): number {
+    this.submittedCards.set(playerId, cards);
 
     return this.players.size - this.submittedCards.size - 1;
   }
 
   public startVotingPhase() {
     let dataToSend: VotingPhaseEventData = {
-      blackCard: this.currentBlackCard,
+      blackCard: this.currentBlackCard.text,
+      blackCardPickNumber: this.currentBlackCard.pick,
       chosenWhiteCards: this.submittedCards,
       zar: this.currentZar,
     };
@@ -113,18 +119,19 @@ export class Game extends EventEmitter {
     // Get ZAR
     this.currentZar = this.switchZar(this.currentZar);
 
-    let blackCard: string = this.getNewBlackCard();
+    let blackCard: blackCard = this.getNewBlackCard();
 
     let whiteCards: Map<string, string[]> = this.getNewWhiteCards();
 
-    this.submittedCards = new Map<string, string>();
+    this.submittedCards = new Map<string, string[]>();
 
     this.currentWhiteCards = whiteCards;
     this.currentBlackCard = blackCard;
 
     let dataToSend: NewRoundEventData = {
       round: this.currentRound,
-      blackCard: blackCard,
+      blackCard: blackCard.text,
+      blackCardPickNumber: blackCard.pick,
       whiteCards: whiteCards,
       zar: this.currentZar,
     };
@@ -132,7 +139,7 @@ export class Game extends EventEmitter {
     return dataToSend;
   }
 
-  private getNewBlackCard(): string {
+  private getNewBlackCard(): blackCard {
     // Read the file synchronously
     const rawData = readFileSync(require.resolve(DATA_PATH), {
       encoding: "utf8",
@@ -144,16 +151,14 @@ export class Game extends EventEmitter {
     // Get the black cards
     const blackCards: { text: string; pick: number }[] = jsonData.black;
 
-    // Get a random black card that has only one pick
-    let randomCard: { text: string; pick: number };
-    do {
-      randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
-    } while (randomCard.pick != 1);
+    let randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
 
-    let randomBlackCard: string = randomCard.text;
-    randomBlackCard = randomBlackCard.replace("_", "______");
+    let randomCardtext: string = randomCard.text;
+    
+    //Replace all _ with ______
+    randomCardtext = randomCardtext.replace(/_/g, "______");
 
-    return randomBlackCard;
+    return {text: randomCardtext, pick: randomCard.pick};
   }
 
   private getNewWhiteCards(): Map<string, string[]> {
@@ -220,10 +225,18 @@ export class Game extends EventEmitter {
     );
   }
 
-  public getSubmittedCardOwner(card: string): string | null {
-    for (let [key, value] of this.submittedCards) {
-      if (value == card) {
-        return key;
+  public getSubmittedCardOwner(cards: string[]): string | null {
+    for (let [player, playerCards] of this.submittedCards) {
+      let areIncluded: boolean = true;
+
+      for(let card of playerCards){
+        if (!cards.includes(card)){
+          areIncluded = false;
+          break;
+        }
+      }
+      if (areIncluded) {
+        return player;
       }
     }
     return null;
@@ -306,7 +319,7 @@ export class Game extends EventEmitter {
     return this.gameState != GameState.LOBBY;
   }
 
-  public getSumbittedCards(): Map<string, string> {
+  public getSumbittedCards(): Map<string, string[]> {
     return this.submittedCards;
   }
 
@@ -318,7 +331,7 @@ export class Game extends EventEmitter {
     return this.currentWhiteCards.get(playerId);
   }
 
-  public getCurrentBlackCard(): string {
+  public getCurrentBlackCard(): blackCard {
     return this.currentBlackCard;
   }
 

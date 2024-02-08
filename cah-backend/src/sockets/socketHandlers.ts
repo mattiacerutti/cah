@@ -105,6 +105,7 @@ export function startListeningToGameEvents() {
             round: gameData.round,
             blackCard: gameData.blackCard,
             whiteCards: gameData.whiteCards,
+            blackCardPickNumber: gameData.blackCardPickNumber,
             zar: gameData.zar,
             wasInvalidated: false,
           },
@@ -160,6 +161,7 @@ export function startListeningToGameEvents() {
             round: gameData.round,
             blackCard: gameData.blackCard,
             whiteCards: gameData.whiteCards,
+            blackCardPickNumber: gameData.blackCardPickNumber,
             zar: gameData.zar,
             wasInvalidated: gameEvent === InternalGameEventTypes.newRoundFromInvalidation,
           },
@@ -220,7 +222,7 @@ export function startListeningToGameEvents() {
           return;
         }
 
-        let whiteCards: string[] = [...gameData.chosenWhiteCards.values()];
+        let whiteCards: string[][] = [...gameData.chosenWhiteCards.values()];
 
         let dataToSend: SocketResponse<VotingPhaseData> = {
           success: true,
@@ -259,7 +261,8 @@ export function startListeningToGameEvents() {
             playerMap: gameData.playerMap,
             roundWinner: gameData.roundWinner,
             blackCard: gameData.blackCard,
-            whiteCard: gameData.whiteCard,
+            blackCardPickNumber: gameData.blackCardPickNumber,
+            whiteCards: gameData.whiteCards,
           },
         };
 
@@ -506,10 +509,12 @@ export function startListeningToNetworkEvents() {
           if (!isPlayerActingOnHimself(socket.id, data.playerId))
             throw new Error(PlayerEventErrors.forbiddenAction);
 
+          console.log("Cards" + data.cards);
+
           remainingPlayers = gameManager.submitCard(
             data.gameId,
             data.playerId,
-            data.card
+            data.cards
           );
         } catch (e) {
           console.log(e);
@@ -543,8 +548,9 @@ export function startListeningToNetworkEvents() {
           if (!isPlayerActingOnHimself(socket.id, data.playerId))
             throw new Error(PlayerEventErrors.forbiddenAction);
 
-          gameManager.submitVote(data.gameId, data.playerId, data.card);
+          gameManager.submitVote(data.gameId, data.playerId, data.cards);
         } catch (e) {
+          console.log(e);
           let dataToSend: SocketResponse<any> = {
             requestId: data.requestId,
             success: false,
