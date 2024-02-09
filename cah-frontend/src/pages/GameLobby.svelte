@@ -55,13 +55,13 @@
 	{#if isHost()}
 		<div class="flex flex-row gap-6">
 			<button
-				class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8"
+				class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8 text-black"
 				on:click={startGame}
 			>
 				Start Game
 			</button>
 			<button
-				class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8"
+				class="bg-primary-blue p-2 rounded-md hover:scale-110 transition-all my-8 text-black"
 				on:click={() => deleteGameModal.show()}>Delete Game</button
 			>
 		</div>
