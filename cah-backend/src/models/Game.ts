@@ -139,60 +139,60 @@ export class Game extends EventEmitter {
     return dataToSend;
   }
 
+  // Piece of code used for testing two picks black cards
+  // private getNewBlackCard(): blackCard {
+  //   // Read the file synchronously
+  //   const rawData = readFileSync(require.resolve(DATA_PATH), {
+  //     encoding: "utf8",
+  //   });
+
+  //   // Parse the JSON content
+  //   const jsonData = JSON.parse(rawData);
+
+  //   // Get the black cards
+  //   const blackCards: { text: string; pick: number }[] = jsonData.black;
+
+  //   // // Get a random black card that has only one pick
+  //   // let randomCard: { text: string; pick: number };
+  //   // do {
+  //   //   randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
+  //   // } while (randomCard.pick != 1);
+
+  //   // TEST: Get a random black card that has only one pick
+  //   let randomCard: { text: string; pick: number };
+  //   do {
+  //     randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
+  //   } while (randomCard.pick != 2);
+
+  //   let randomBlackCard: string = randomCard.text;
+
+  //   //Replace all _ with ______
+  //   randomBlackCard = randomBlackCard.replace(/_/g, "______");
+
+  //   return {text: randomBlackCard, pick: randomCard.pick};
+  // }
+
   private getNewBlackCard(): blackCard {
-    // Read the file synchronously
+    //Read the file synchronously
     const rawData = readFileSync(require.resolve(DATA_PATH), {
       encoding: "utf8",
     });
 
-    // Parse the JSON content
+    //Parse the JSON content
     const jsonData = JSON.parse(rawData);
 
-    // Get the black cards
-    const blackCards: { text: string; pick: number }[] = jsonData.black;
-
-    // // Get a random black card that has only one pick
-    // let randomCard: { text: string; pick: number };
-    // do {
-    //   randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
-    // } while (randomCard.pick != 1);
-
-    // TEST: Get a random black card that has only one pick
-    let randomCard: { text: string; pick: number };
-    do {
-      randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
-    } while (randomCard.pick != 2);
-
-    let randomBlackCard: string = randomCard.text;
-    
-    //Replace all _ with ______
-    randomBlackCard = randomBlackCard.replace(/_/g, "______");
-    
-    return {text: randomBlackCard, pick: randomCard.pick};
-  }
-
-  /*
-    private getNewBlackCard(): blackCard {
-    // Read the file synchronously
-    const rawData = readFileSync(require.resolve(DATA_PATH), {
-      encoding: "utf8",
-    });
-
-    // Parse the JSON content
-    const jsonData = JSON.parse(rawData);
-
-    // Get the black cards
+    //Get the black cards
     const blackCards: { text: string; pick: number }[] = jsonData.black;
 
     let randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
 
     let randomCardtext: string = randomCard.text;
-    
+
     //Replace all _ with ______
     randomCardtext = randomCardtext.replace(/_/g, "______");
 
-    return {text: randomCardtext, pick: randomCard.pick};
-  } */
+    return { text: randomCardtext, pick: randomCard.pick };
+  }
 
   private getNewWhiteCards(): Map<string, string[]> {
     // Read the file synchronously
@@ -262,8 +262,8 @@ export class Game extends EventEmitter {
     for (let [player, playerCards] of this.submittedCards) {
       let areIncluded: boolean = true;
 
-      for(let card of playerCards){
-        if (!cards.includes(card)){
+      for (let card of playerCards) {
+        if (!cards.includes(card)) {
           areIncluded = false;
           break;
         }
