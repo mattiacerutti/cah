@@ -53,7 +53,7 @@ class SocketService {
 		});
 
 		this.socket.on('connect_error', () => {
-			if (get(this.connectionStatus).state !== ConnectionState.InitialState) {
+			if (get(this.connectionStatus).state === ConnectionState.Connected) {
 				this.connectionStatus.set({
 					state: ConnectionState.Disconnected,
 					attempts: 0
