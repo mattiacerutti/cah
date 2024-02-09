@@ -885,7 +885,7 @@
       "Rectangles",
       "Rehab",
       "Repression",
-      "reputation,\\nreputation,\\nreputation",
+      "reputation,\nreputation,\nreputation",
       "Reverse gentrification",
       "Rich people",
       "Riding off into the sunset",
@@ -1765,7 +1765,7 @@
       "The boogeyman",
       "The day the Mutant Ninja Turtles become adults",
       "The Flying Spaghetti Monster",
-      "the four,\\nor the three,\\nor the two",
+      "the four,\nor the three,\nor the two",
       "The gun lobby",
       "The harsh light of day",
       "The harsh reality that all horses are people in horse costumes",
@@ -2429,7 +2429,7 @@
       "My secret butt",
       "My son's dipshit friends",
       "My son's husband's huge cock",
-      "My wife.\\n(in Borat voice)",
+      "My wife.\n(in Borat voice)",
       "Naked Dad",
       "Netflix",
       "New DNA evidence exonerating OJ Simpson",
@@ -4076,10 +4076,10 @@
       "Collapsing into singularity. Twenty minutes fo foreplay, three minutes of coitus, five minutes of rest, back to the yards for some croquet",
       "Computers",
       "Cum, but it's ranch",
-      "Fashion... \\nheard of if?",
+      "Fashion... \nheard of if?",
       "Getting my mind boggled by a gang of mind bogglers",
       "Letting these hoes know",
-      "Meatballs,\\nmeatballs,\\nmeatballs!",
+      "Meatballs,\nmeatballs,\nmeatballs!",
       "Passing fart and making toilet",
       "Running afoul of the Sultan's Janissaries",
       "Sheboygan, Wisconsin",
@@ -4088,7 +4088,7 @@
       "The tiny man who only eats coffee beans and diarrheas into my thermos every morning",
       "Using electric eels to solve the world's energy crisis",
       "Why, a hot air balloon of course!",
-      "You there!\\nFrench boy!",
+      "You there!\nFrench boy!",
       "$10,000 worth of silica gel",
       "A chair-shaped fart sponge",
       "A lethal dose of caffeine",
@@ -4382,7 +4382,7 @@
       },
       { "text": "Arby's: We Have _.", "pick": 1 },
       {
-        "text": "Are you thinking what I'm thinking, B1?\\n\\nI think I am, B2: it's _ time!",
+        "text": "Are you thinking what I'm thinking, B1?\n\nI think I am, B2: it's _ time!",
         "pick": 1
       },
       { "text": "As my New Year's resolution, I vow to give up _.", "pick": 1 },
@@ -4501,7 +4501,7 @@
       },
       { "text": "Having problems with _? Try _!", "pick": 2 },
       {
-        "text": "Here is the church\\nHere is the steeple\\nOpen the doors\\nAnd there is _.",
+        "text": "Here is the church\nHere is the steeple\nOpen the doors\nAnd there is _.",
         "pick": 1
       },
       {
@@ -4775,7 +4775,7 @@
         "pick": 1
       },
       { "text": "Sorry everyone, I just _.", "pick": 1 },
-      { "text": "Step 1: _.\\nStep 2: _.\\nStep 3: Profit.", "pick": 2 },
+      { "text": "Step 1: _.\nStep 2: _.\nStep 3: Profit.", "pick": 2 },
       {
         "text": "Studies show that lab rats navigate mazes 50% faster after being exposed to _.",
         "pick": 1
@@ -4828,7 +4828,7 @@
         "pick": 2
       },
       {
-        "text": "This is the way the world ends\\nThis is the way the world ends\\nNot with a bang but with _.",
+        "text": "This is the way the world ends\nThis is the way the world ends\nNot with a bang but with _.",
         "pick": 1
       },
       { "text": "This is your pilot speaking. Please prepare for _.", "pick": 1 },
@@ -5074,7 +5074,7 @@
         "text": "Isn't this great, honey? Just you, me, the kids, and _.",
         "pick": 1
       },
-      { "text": "It's BIG.\\nIt's SCARY.\\nIt's _!", "pick": 1 },
+      { "text": "It's BIG.\nIt's SCARY.\nIt's _!", "pick": 1 },
       { "text": "James Bond will return in \"No Time for _.\"", "pick": 1 },
       { "text": "Joey, look out behind you! It's _!", "pick": 1 },
       {
@@ -5217,7 +5217,7 @@
       },
       { "text": "Dear Substitute Teacher, could you please stop _?", "pick": 1 },
       {
-        "text": "DOCTOR:\\nWhat seems to be the problem?\\n\\nYOU: \\n_.",
+        "text": "DOCTOR:\nWhat seems to be the problem?\n\nYOU: \n_.",
         "pick": 1
       },
       {
@@ -5335,7 +5335,7 @@
         "pick": 2
       },
       {
-        "text": "Twas the night before Christmas, and all through the house,\\n\\nnot a creature was stirring, not even _.",
+        "text": "Twas the night before Christmas, and all through the house,\n\nnot a creature was stirring, not even _.",
         "pick": 1
       },
       {
@@ -5677,7 +5677,7 @@
       },
       { "text": "LSD + _ = really bad time.", "pick": 1 },
       {
-        "text": "Mom's to-do list:\\n * Buy Groceries\\n * Clean up _.\\n * Soccer Practice.",
+        "text": "Mom's to-do list:\n * Buy Groceries\n * Clean up _.\n * Soccer Practice.",
         "pick": 1
       },
       {
@@ -5716,7 +5716,7 @@
         "pick": 1
       },
       {
-        "text": "The top Google auto-complete results for \"Barack Obama\":\\nBarack Obama Height.\\nBarack Obama net worth.\\nBarack Obama _.",
+        "text": "The top Google auto-complete results for \"Barack Obama\":\nBarack Obama Height.\nBarack Obama net worth.\nBarack Obama _.",
         "pick": 1
       },
       {
@@ -5767,27 +5767,27 @@
         "text": "Duuuuuuude. You have got to go to space. _ is awesome in space.",
         "pick": 1
       },
-      { "text": "Five,\\nfour,\\nthree,\\ntwo,\\none....\\n_!", "pick": 1 },
+      { "text": "Five,\nfour,\nthree,\ntwo,\none....\n_!", "pick": 1 },
       {
         "text": "For hunting in the King's forest, I hereby sentence you to death by _.",
         "pick": 1
       },
       { "text": "Give me ten good men and 48 hours. I'll get you _.", "pick": 1 },
-      { "text": "Goldfinger!\\nHe's the man,\\nthe man with _.", "pick": 1 },
+      { "text": "Goldfinger!\nHe's the man,\nthe man with _.", "pick": 1 },
       { "text": "Goodbye, _, hello _!", "pick": 2 },
       {
         "text": "Here's a little something I learned in business school: The customer is always _.",
         "pick": 1
       },
       {
-        "text": "Hey, honey.\\nFor the bedroom, were you thinking, \"Robin's Egg Blue\" or _Pink?\"",
+        "text": "Hey, honey.\nFor the bedroom, were you thinking, \"Robin's Egg Blue\" or _Pink?\"",
         "pick": 1
       },
       {
-        "text": "I hate this job.\\nI hate this place.\\nMost of all, I hate _.\\nI quit.",
+        "text": "I hate this job.\nI hate this place.\nMost of all, I hate _.\nI quit.",
         "pick": 1
       },
-      { "text": "I have solved politics.\\nMy solution is _.", "pick": 1 },
+      { "text": "I have solved politics.\nMy solution is _.", "pick": 1 },
       { "text": "I so drunk I _.", "pick": 1 },
       {
         "text": "I swear to God I'm gonna murder my husband if he doesn't shut the fuck up about _.",
@@ -5807,7 +5807,7 @@
         "pick": 1
       },
       {
-        "text": "It's the 21st century.\\nA woman shouldn't have to apologize for _.",
+        "text": "It's the 21st century.\nA woman shouldn't have to apologize for _.",
         "pick": 1
       },
       {
@@ -5822,7 +5822,7 @@
         "text": "New at TGI Fridays! It's what you've been waiting for: The _ Burger.",
         "pick": 1
       },
-      { "text": "Oh no!\\nHere it comes!\\nOhhhhh god!\\nIt's _.", "pick": 1 },
+      { "text": "Oh no!\nHere it comes!\nOhhhhh god!\nIt's _.", "pick": 1 },
       {
         "text": "Oh you haaaaaaave to see this new documentary on Netflix. I don't want to give anything away, but let's just say it will change the way you look at _.",
         "pick": 1
@@ -5867,13 +5867,13 @@
         "pick": 1
       },
       {
-        "text": "What's up, YouTube?\\nUser DanTheMan wanted to see _, so here we go.",
+        "text": "What's up, YouTube?\nUser DanTheMan wanted to see _, so here we go.",
         "pick": 1
       },
       { "text": "Why did the chicken cross the road?", "pick": 1 },
       { "text": "Why my mustache smell so bad?", "pick": 1 },
       {
-        "text": "Yeah that's so hot.\\nI'm so close.\\nTalk about _ again!\\nOH I'M CUMMING!",
+        "text": "Yeah that's so hot.\nI'm so close.\nTalk about _ again!\nOH I'M CUMMING!",
         "pick": 1
       },
       {
@@ -6163,7 +6163,7 @@
         "pick": 1
       },
       {
-        "text": "Forget Fifty Shades of Grey...\\n\\nGive me Fifty Shades of _!",
+        "text": "Forget Fifty Shades of Grey...\n\nGive me Fifty Shades of _!",
         "pick": 1
       },
       {
@@ -6193,7 +6193,7 @@
       { "text": "Other parents worry about _ but I stress over _.", "pick": 2 },
       { "text": "The Juice is loose.  And by Juice I mean _.", "pick": 1 },
       {
-        "text": "This year's trendiest card game:\\n\\n\"_ Against _.\"",
+        "text": "This year's trendiest card game:\n\n\"_ Against _.\"",
         "pick": 2
       },
       { "text": "We played baseball with _.", "pick": 1 },
@@ -6407,7 +6407,7 @@
       },
       { "text": "Next season on Celebrity Apprentice: _.", "pick": 1 },
       {
-        "text": "O say, does _ yet wave\\n\\no'er the land of the fre and the home of the brave?",
+        "text": "O say, does _ yet wave\n\no'er the land of the fre and the home of the brave?",
         "pick": 1
       },
       {
@@ -6448,7 +6448,7 @@
         "text": "But wait, there's more! If you order _ in the next 15 minutes, we'll throw in _ absolutely free!",
         "pick": 2
       },
-      { "text": "GREETINGS HUMANS\\nI AM _ BOT\\nEXECUTING PROGRAM.", "pick": 1 },
+      { "text": "GREETINGS HUMANS\nI AM _ BOT\nEXECUTING PROGRAM.", "pick": 1 },
       { "text": "Heroin: a proud supporter of _.", "pick": 1 },
       {
         "text": "I really hope my grandma doesn't ask me to explain _ again.",
@@ -6500,15 +6500,15 @@
       },
       { "text": "Sure, sex is great, but have you tried _?", "pick": 1 },
       {
-        "text": "Coming up on Turner Classic Movies:\\nSean Connery and Alec Baldwin star in \"The Hunt for _.\"",
+        "text": "Coming up on Turner Classic Movies:\nSean Connery and Alec Baldwin star in \"The Hunt for _.\"",
         "pick": 1
       },
       {
-        "text": "FW: re:\\nFBI WARNING!!! VIOLENT GANGS USING _ TO RECRUIT CHILDREN!",
+        "text": "FW: re:\nFBI WARNING!!! VIOLENT GANGS USING _ TO RECRUIT CHILDREN!",
         "pick": 1
       },
       {
-        "text": "Hey, kids.\\nI'm Connor's dad, but you can call me Mr. _.",
+        "text": "Hey, kids.\nI'm Connor's dad, but you can call me Mr. _.",
         "pick": 1
       },
       {
@@ -6628,7 +6628,7 @@
         "pick": 1
       },
       {
-        "text": "Here's what you can expect for the new year.\\nOut: _.\\nIn: _.",
+        "text": "Here's what you can expect for the new year.\nOut: _.\nIn: _.",
         "pick": 2
       },
       { "text": "It's beginning to look a lot like _.", "pick": 1 },
@@ -6645,7 +6645,7 @@
         "pick": 1
       },
       {
-        "text": "Alright everybody, HOLD!\\nKelly, why is there _ on my stage?",
+        "text": "Alright everybody, HOLD!\nKelly, why is there _ on my stage?",
         "pick": 1
       },
       { "text": "Comedy = Tragedy + _.", "pick": 1 },
@@ -6654,7 +6654,7 @@
         "pick": 3
       },
       {
-        "text": "Match-maker,\\nmatch-maker,\\nmake me a match.\\nFind me _.",
+        "text": "Match-maker,\nmatch-maker,\nmake me a match.\nFind me _.",
         "pick": 1
       },
       {
@@ -6879,7 +6879,7 @@
         "text": "I'm Bobby Flay, and if you can't stand _, get out of the kitchen!",
         "pick": 1
       },
-      { "text": "It's not delivery.\\nIt's _.", "pick": 1 },
+      { "text": "It's not delivery.\nIt's _.", "pick": 1 },
       { "text": "Aw babe, your burps smell like _!", "pick": 1 },
       {
         "text": "Don't miss Rachel Ray's hit new show, Cooking with _.",

@@ -58,19 +58,19 @@
 {#if !isVotingPhase}
 	<div class=" h-screen flex justify-center items-center flex-col">
 		<h1 class="text-4xl font-bold my-0.5">
-			Sei lo ZAR! Attendi che tutti i giocatori abbiano finito di votare.
+			You're the ZAR! Wait for the other players to submit their cards.
 		</h1>
 	</div>
 {:else}
 	<div class=" h-screen flex justify-center items-center flex-col mx-12">
-		<h1 class="text-2xl font-bold my-0.5">
+		<h1 class="text-2xl font-bold my-0.5 text-center">
 			{#if whiteCardPointer >= 0}
 				{#each blackCardParts as part, index}
-					{@html part}
+					{@html part.replace(/\n/g, '<br>')}
 					<!-- svelte-ignore a11y-click-events-have-key-events -->
 					<!-- svelte-ignore a11y-no-static-element-interactions -->
 					{#if index < whiteCards[whiteCardPointer].length}
-						<span class="text-primary-orange cursor-pointer">
+						<span class="text-primary-orange">
 							{whiteCards[whiteCardPointer][index]}</span
 						>
 					{/if}

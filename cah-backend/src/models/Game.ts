@@ -151,6 +151,39 @@ export class Game extends EventEmitter {
     // Get the black cards
     const blackCards: { text: string; pick: number }[] = jsonData.black;
 
+    // // Get a random black card that has only one pick
+    // let randomCard: { text: string; pick: number };
+    // do {
+    //   randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
+    // } while (randomCard.pick != 1);
+
+    // TEST: Get a random black card that has only one pick
+    let randomCard: { text: string; pick: number };
+    do {
+      randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
+    } while (randomCard.pick != 2);
+
+    let randomBlackCard: string = randomCard.text;
+    
+    //Replace all _ with ______
+    randomBlackCard = randomBlackCard.replace(/_/g, "______");
+    
+    return {text: randomBlackCard, pick: randomCard.pick};
+  }
+
+  /*
+    private getNewBlackCard(): blackCard {
+    // Read the file synchronously
+    const rawData = readFileSync(require.resolve(DATA_PATH), {
+      encoding: "utf8",
+    });
+
+    // Parse the JSON content
+    const jsonData = JSON.parse(rawData);
+
+    // Get the black cards
+    const blackCards: { text: string; pick: number }[] = jsonData.black;
+
     let randomCard = blackCards[Math.floor(Math.random() * blackCards.length)];
 
     let randomCardtext: string = randomCard.text;
@@ -159,7 +192,7 @@ export class Game extends EventEmitter {
     randomCardtext = randomCardtext.replace(/_/g, "______");
 
     return {text: randomCardtext, pick: randomCard.pick};
-  }
+  } */
 
   private getNewWhiteCards(): Map<string, string[]> {
     // Read the file synchronously

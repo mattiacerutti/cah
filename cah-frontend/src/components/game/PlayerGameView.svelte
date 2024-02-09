@@ -74,16 +74,22 @@
 
 {#if !isVotingPhase}
 	<div class=" h-screen flex justify-center items-center flex-col mx-12">
-		<h1 class="text-2xl font-bold my-0.5">
+		<h1 class="text-2xl font-bold my-0.5 text-center">
 			<!-- {@html replacedBlackCard} -->
 			{#each blackCardParts as part, index}
-				{@html part}
+				{@html part.replace(/\n/g, '<br>')}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				{#if index < selectedCards.length}
 					{#if selectedCards[index] !== ''}
 						<span
 							class="text-primary-orange cursor-pointer"
+							on:drop={(event) => {
+								event.preventDefault();
+								let data = event.dataTransfer.getData('text/plain');
+								selectedCards[index] = data;
+							}}
+							on:dragover={(event) => event.preventDefault()}
 							on:click={() => {
 								selectedCards[index] = '';
 							}}
@@ -91,7 +97,14 @@
 							{selectedCards[index]}</span
 						>
 					{:else}
-						______
+						<span
+						on:drop={(event) => {
+							event.preventDefault();
+							let data = event.dataTransfer.getData('text/plain');
+							selectedCards[index] = data;
+						}}
+						on:dragover={(event) => event.preventDefault()}
+						>______</span>
 					{/if}
 				{/if}
 			{/each}
@@ -107,6 +120,10 @@
 						<div
 							role="button"
 							tabindex="0"
+							draggable="true"
+							on:dragstart={(event) => {
+								event.dataTransfer.setData('text/plain', card);
+							}}
 							on:click={() => {
 								//Put in first available void string in selectedCards
 								let index = selectedCards.indexOf('');
@@ -147,7 +164,7 @@
 	</div>
 {:else}
 	<div class=" h-screen flex justify-center items-center flex-col">
-		<h1 class="text-4xl font-bold my-0.5">Attendi che lo ZAR voti la carta..</h1>
+		<h1 class="text-4xl font-bold my-0.5">The ZAR is choosing the winner..</h1>
 	</div>
 {/if}
 
